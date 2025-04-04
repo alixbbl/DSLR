@@ -33,15 +33,15 @@ def display_histograms(data_melted: pd.DataFrame) -> None:
         # on peut ensuite creer l'histogramme pour chaque cours
         sns.histplot(course_data, x='Score', hue='Hogwarts House', multiple='stack', bins=20, palette='Set2', ax=ax)
         # Ajouter un titre pour chaque graphique
-        ax.set_title(course, fontsize=6)
-        ax.set_xlabel('Score')
-        ax.set_ylabel('Frequency')
+        ax.set_title(course, fontsize=10)
+        ax.set_xlabel('Score', fontsize=8)
+        ax.set_ylabel('Frequency', fontsize=8)
+        
     fig.suptitle("Score Distribution by Course and School", fontsize=12)
     plt.show()
 
 # **************************** MAIN *******************************
 
-# PENSER A AJOUTER UNE ASTUCE POUR LES DATASETS DE TEST QUI NE POSSEDENT PAS HOGHOUSE => crash possible sinon
 def main(parsed_args):
     filepath = parsed_args.path_csv_to_read
     data = upload_csv(filepath)

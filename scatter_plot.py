@@ -12,11 +12,27 @@ def display_scatters(houses: List[str], data: pd.DataFrame, course1: str, course
     """
     Display scatter plots for each house.
     """
+    courses_dict = {
+                    'ari': 'Arithmancy',
+                    'astro': 'Astronomy',
+                    'herbo': 'Herbology',
+                    'def': 'Defense Against the Dark Arts',
+                    'divin': 'Divination',
+                    'mugg': 'Muggle Studies',
+                    'runes': 'Ancient Runes',
+                    'magic': 'History of Magic',
+                    'trans': 'Transfiguration',
+                    'potions': 'Potions',
+                    'care': 'Care of Magical Creatures',
+                    'charms': 'Charms',
+                    'flying': 'Flying'
+    }
     colors = {'Gryffindor': '#FF0000', 'Hufflepuff': '#FFFF00', 'Ravenclaw': '#0000FF', 'Slytherin': '#00FF00'}
     fig, ax = plt.subplots(figsize=(10, 6))
+
     for house in houses:
         house_data = data[data['Hogwarts House'] == house]
-        ax.scatter(house_data[course1], house_data[course2], label=house, color=colors.get(house, '#000000'), alpha=0.5)
+        ax.scatter(house_data[courses_dict[course1]], house_data[courses_dict[course2]], label=house, color=colors.get(house, '#000000'), alpha=0.5)
 
     ax.set_xlabel(course1)
     ax.set_ylabel(course2)
@@ -86,3 +102,5 @@ if __name__ == "__main__":
                                 flying: Flying""")
     parsed_args = parser.parse_args()
     main(parsed_args)
+
+# modifier pour pouvoir TOUT afficher, les 78 comibinaisons possibles 
