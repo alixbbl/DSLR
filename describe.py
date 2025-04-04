@@ -45,7 +45,8 @@ def main(parsed_args):
     data=upload_csv(filepath)
     # print(data.dtypes)
     numeric_data = data.select_dtypes(include=['float','int'])
-    numeric_data = numeric_data.drop('Hogwarts House', axis=1)
+    if 'Hogwarts House' in numeric_data.columns:
+        numeric_data = numeric_data.drop('Hogwarts House', axis=1)
     # print(numeric_data.shape)
     to_display = do_the_maths(numeric_data)
     print(to_display)
