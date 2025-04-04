@@ -17,7 +17,8 @@ def log_loss(y_true: pd.Series, y_pred: pd.Series) -> float:
     loss_value = -np.mean(y_true * np.log(y_pred) + (1 - y_true) * np.log(1 - y_pred))
     return loss_value
 
-def write_output(list_thetas: List[Dict]) -> None:
+
+def write_output_thetas(list_thetas: List[Dict]) -> None:
     """"
         This functions returns a file with the thetas for predictions.
     """
@@ -31,6 +32,21 @@ def write_output(list_thetas: List[Dict]) -> None:
 
         for house, thetas in list_thetas.items():
             writer.writerow([house] + thetas.squeeze().tolist())
+ 
+    print(f"{output_file} is printed ✅ !")
+
+
+def write_output_predictions(list_predictions: List[str]) -> None:
+    """"
+        This functions returns a file with the predictions.
+    """
+    output_file = "predictions.csv"
+    with open(output_file, mode='w', newline = '') as file:
+        writer = csv.writer(file)
+        header = ['Hogwarts House']
+        writer.writerow(header)
+        for house in list_predictions:
+            writer.writerow([house])
  
     print(f"{output_file} is printed ✅ !")
 

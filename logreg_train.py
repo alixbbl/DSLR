@@ -5,7 +5,7 @@ from typing import List, Tuple
 from utils.upload_csv import upload_csv
 from utils.constants import EXPECTED_LABELS, MANDATORY_FEATURES_SET, TRAINING_FEATURES_LIST
 from utils.maths import MyMaths
-from utils.utils_logistic_regression import log_loss, write_output, plot_cost_report
+from utils.utils_logistic_regression import log_loss, write_output_thetas, plot_cost_report
 
 class Trainer():
     
@@ -29,7 +29,7 @@ class Trainer():
         if ('Hogwarts House') not in self.df.columns:
             raise Exception('Sorry, this is not a proper training dataset')
         columns_list = list(self.df.columns)
-        if not MANDATORY_FEATURES_SET <= columns_list:
+        if not MANDATORY_FEATURES_SET <= set(columns_list):
             raise Exception('Magic hat needs more than that to perform its magic !')
         return True
     
@@ -76,7 +76,7 @@ class Trainer():
     # ici 0 est "faux" et 1 est "vrai" concernant une tache de classification.
     def ft_sigmoid(self, x):
         """Classic sigmoid function, converts any number in a 0 to 1 probability."""
-        return 1 / (1 + np.exp(-x))
+        return 1 / (1 + np.exp(-x)) 
     
     # on remet la fonction issue de Linear Regression qui permet de calculer la descente de gradienbt et donc
     # de chercher le minimum de la fonction de cout (differente de celle de la RegLin)
@@ -130,7 +130,7 @@ def main(parsed_args):
             if trainer.ft_is_valid_training_dataframe():
                 trainer.ft_prepare_data() # a ce stade on a un dataset d'entrainement fini (suppr. des nulls, encoding, standardization ...)
                 list_thetas, list_cost_reports = trainer.ft_train()
-                write_output(list_thetas)
+                write_output_thetas(list_thetas)
                 # Appelle la fonction de plot dans ton code où tu veux visualiser le rapport
                 plot_cost_report(list_cost_reports['Gryffindor'])
 
