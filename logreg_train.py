@@ -39,11 +39,11 @@ class Trainer():
             required for scalar product and bias, and by deleting the null entries in the dataset (only 
             valid for a few null entries < 5%).
         """
-        for feature in self.relevant_features:
-            if self.df[feature].isnull().sum() > 0:
-                print(f'For feature {feature} : {self.df[feature].isnull().sum()} NULL entries!')
-            else:
-                print(f'No null entry for {feature}')
+        # for feature in self.relevant_features:
+        #     if self.df[feature].isnull().sum() > 0:
+        #         print(f'For feature {feature} : {self.df[feature].isnull().sum()} NULL entries!')
+        #     else:
+        #         print(f'No null entry for {feature}')
         self.df.dropna(subset=self.relevant_features, inplace=True)
         
         self.data_to_train = self.df[self.relevant_features].copy() # on fait une copie plutot qu'une reference
@@ -78,7 +78,7 @@ class Trainer():
         """Classic sigmoid function, converts any number in a 0 to 1 probability."""
         return 1 / (1 + np.exp(-x)) 
     
-    # on remet la fonction issue de Linear Regression qui permet de calculer la descente de gradienbt et donc
+    # on remet la fonction issue de Linear Regression qui permet de calculer la descente de gradient et donc
     # de chercher le minimum de la fonction de cout (differente de celle de la RegLin)
     # Rappels : X est la matrice des features et y est la variable cible
     # m est le nombre d'entrees du dataset et n le nbre de features, cost_report stocke le loss a chaque iteration du training
@@ -96,10 +96,8 @@ class Trainer():
             theta -= learning_rate * gradient # formule d'actualisation de theta (theta0, theta1) l'intercept et la pente
             log_loss_value = log_loss(y, y_predictions) # injecter la fonction de log_loss qui est la fonction de cout en LogReg
             cost_report.append(log_loss_value)
-        
             # if i % 100 == 0:
             #     print(f"Iteration {i}: Cost = {log_loss_value:.4f}, theta = {theta.T}")
-
         return theta, cost_report
         
     def ft_train(self) -> Tuple[float, List[float]]:
@@ -131,7 +129,6 @@ def main(parsed_args):
                 trainer.ft_prepare_data() # a ce stade on a un dataset d'entrainement fini (suppr. des nulls, encoding, standardization ...)
                 list_thetas, list_cost_reports = trainer.ft_train()
                 write_output_thetas(list_thetas)
-                # Appelle la fonction de plot dans ton code où tu veux visualiser le rapport
                 plot_cost_report(list_cost_reports['Gryffindor'])
 
         except Exception as e:

@@ -16,21 +16,25 @@ MANDATORY_FEATURES_SET = {
                         }
 
 TRAINING_FEATURES_LIST = [
-                            'Ancient Runes', 
                             'Astronomy', 
-                            'Charms', 
-                            'Defense Against the Dark Arts',
-                            'Divination', 
                             'Herbology', 
-                            'Flying',
+                            'Divination', 
+                            'Muggle Studies', 
+                            'Ancient Runes', 
+                            'History of Magic',
+                            'Charms', 
                             ]
 
-USELESS_COLUMNS_PREDICTING_PHASE = ['Index', 
+USELESS_COLUMNS_PREDICTING_PHASE = [
+                                    'Index', 
                                     'Hogwarts House', 
-                                    'Arithmancy', 
-                                    'Muggle Studies',
-                                    'Potions',
                                     'Best Hand',
                                     'Birthday',
-                                    'History of Magic',
+                                    'Arithmancy',
+                                    'Defense Against the Dark Arts', 
+                                    'Potions',
+                                    'Transfiguration', 
+                                    'Potions', 
+                                    'Care of Magical Creatures',                                     
+                                    'Flying',
                                     ]

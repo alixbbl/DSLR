@@ -33,22 +33,22 @@ def write_output_thetas(list_thetas: List[Dict]) -> None:
         for house, thetas in list_thetas.items():
             writer.writerow([house] + thetas.squeeze().tolist())
  
-    print(f"{output_file} is printed ✅ !")
+    print(f"{output_file} is printed !")
 
 
 def write_output_predictions(list_predictions: List[str]) -> None:
-    """"
-        This functions returns a file with the predictions.
     """
-    output_file = "predictions.csv"
-    with open(output_file, mode='w', newline = '') as file:
+    This function writes the predictions to a CSV file.
+    """
+    output_file = "houses.csv"
+    with open(output_file, mode='w', newline='') as file:
         writer = csv.writer(file)
-        header = ['Hogwarts House']
+        header = ['Index', 'Hogwarts House']
         writer.writerow(header)
-        for house in list_predictions:
-            writer.writerow([house])
- 
-    print(f"{output_file} is printed ✅ !")
+        for i, house in enumerate(list_predictions, start=0):
+            writer.writerow([i, house])
+
+    print(f"{output_file} is printed!")
 
 
 def plot_cost_report(list_cost_report):

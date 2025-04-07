@@ -32,11 +32,19 @@ def display_histograms(data_melted: pd.DataFrame) -> None:
         course_data = data_melted[data_melted['Course'] == course]
         # on peut ensuite creer l'histogramme pour chaque cours
         sns.histplot(course_data, x='Score', hue='Hogwarts House', multiple='stack', bins=20, palette='Set2', ax=ax)
-        # Ajouter un titre pour chaque graphique
         ax.set_title(course, fontsize=10)
         ax.set_xlabel('Score', fontsize=8)
         ax.set_ylabel('Frequency', fontsize=8)
-        
+        legend = ax.get_legend()
+        if legend:
+            legend.set_title("Poudlard Houses")  # Titre de la légende
+            legend.get_title().set_fontsize(8)  # Taille du titre
+            for text in legend.get_texts():
+                text.set_fontsize(7)
+    total_plots = len(courses)
+    for j in range(total_plots, 16):  # 16 = nrows * ncols
+        fig.delaxes(axes[j // 4, j % 4]) 
+ 
     fig.suptitle("Score Distribution by Course and School", fontsize=12)
     plt.show()
 

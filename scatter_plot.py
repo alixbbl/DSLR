@@ -7,13 +7,13 @@ from typing import List
 # Ce code doit permettre à l'utilisateur de visualiser si, par exemple, les élèves de Gryffondor 
 # ont une certaine tendance à avoir de bonnes notes dans les deux matières ou s'il y a des 
 # différences de performance entre les maisons.
+# suite a l'histogramme on peut enlever deja : Care of Magical Creatures et Arithmancy
 
 def display_scatters(houses: List[str], data: pd.DataFrame, course1: str, course2: str) -> None:
     """
     Display scatter plots for each house.
     """
     courses_dict = {
-                    'ari': 'Arithmancy',
                     'astro': 'Astronomy',
                     'herbo': 'Herbology',
                     'def': 'Defense Against the Dark Arts',
@@ -23,7 +23,6 @@ def display_scatters(houses: List[str], data: pd.DataFrame, course1: str, course
                     'magic': 'History of Magic',
                     'trans': 'Transfiguration',
                     'potions': 'Potions',
-                    'care': 'Care of Magical Creatures',
                     'charms': 'Charms',
                     'flying': 'Flying'
     }
@@ -66,41 +65,11 @@ if __name__ == "__main__":
                         nargs='?',
                         type=str,
                         help="CSV file path to read")
-    parser.add_argument('course1',
-                        type=str,
-                        choices=courses_list,
-                        help="""Choose a course from the following list:  
-                                ari: Arithmancy,
-                                astro: Astronomy,
-                                herbo: Herbology,
-                                def: Defense Against the Dark Arts,
-                                divin: Divination,
-                                mugg: Muggle Studies,
-                                runes: Ancient Runes,
-                                magic: History of Magic,
-                                trans: Transfiguration,
-                                potions: Potions,
-                                care: Care of Magical Creatures,
-                                charms: Charms,
-                                flying: Flying""")
-    parser.add_argument('course2',
-                        type=str,
-                        choices=courses_list,
-                        help="""Choose a course from the following list:  
-                                ari: Arithmancy,
-                                astro: Astronomy,
-                                herbo: Herbology,
-                                def: Defense Against the Dark Arts,
-                                divin: Divination,
-                                mugg: Muggle Studies,
-                                runes: Ancient Runes,
-                                magic: History of Magic,
-                                trans: Transfiguration,
-                                potions: Potions,
-                                care: Care of Magical Creatures,
-                                charms: Charms,
-                                flying: Flying""")
+    parser.add_argument("--courses", 
+                        nargs="*", # signifie "nombre d'arguments variables"
+                        default=None, # valeur par defaut
+                        help="To compare two courses (by: --courses Arithmancy Astronomy) or 'all' to generate and print all combinations.")
     parsed_args = parser.parse_args()
     main(parsed_args)
 
-# modifier pour pouvoir TOUT afficher, les 78 comibinaisons possibles 
+# modifier pour pouvoir TOUT afficher, les 52 combinaisons possibles 

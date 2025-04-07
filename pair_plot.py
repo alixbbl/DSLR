@@ -40,7 +40,7 @@ def display_pair_plot(data_num: pd.DataFrame) -> None:
     plt.show()
 
 
-
+# Enlever une des variables correlees (Defense against) - a choisir l'une des var.
 
 
 # **************************** MAIN *******************************

@@ -4,6 +4,7 @@ import argparse
 from typing import List, Tuple
 from utils.upload_csv import upload_csv
 from utils.constants import EXPECTED_LABELS, TRAINING_FEATURES_LIST, USELESS_COLUMNS_PREDICTING_PHASE
+from utils.constants import  MANDATORY_FEATURES_SET # a supprimer
 from utils.utils_logistic_regression import write_output_predictions, plot_cost_report
 
 class Tester():
@@ -63,18 +64,19 @@ class Tester():
 
 # *************************************** MAIN **************************************
 
+# normaliser les valeurs
 def main(parsed_args):
     try:
         df = upload_csv(parsed_args.path_csv)
         thetas = upload_csv(parsed_args.thetas_file)
         if df is None or thetas is None: return
         try:
-            tester=Tester(df, thetas)      
+            tester=Tester(df, thetas)    
             if tester.ft_is_valid_testing_dataframe():
                 tester.ft_prepare_prediction_dataset() # a ce stade on a un dataset d'entrainement fini (suppr. des nulls, encoding, standardization ...)
                 predictions = tester.ft_predict()
                 # print(predictions)
-                write_output_predictions(predictions)
+            write_output_predictions(predictions)
 
         except Exception as e:
             print(f'Something happened : {e}')
