@@ -13,7 +13,7 @@ def upload_csv(filepath: str) -> pd.DataFrame:
         data = pd.read_csv(filepath, encoding='utf-8')
         if data.empty:
             raise ValueError("The CSV file is empty.")
-        print(f"Successfully loaded a CSV file of dimensions: {data.shape}!")
+        # print(f"Successfully loaded a CSV file of dimensions: {data.shape}!")
         return data
     except FileNotFoundError:
         raise FileNotFoundError(f"File not found: {filepath}")

@@ -4,7 +4,6 @@ import argparse
 from typing import List, Tuple
 from utils.upload_csv import upload_csv
 from utils.constants import EXPECTED_LABELS, TRAINING_FEATURES_LIST, USELESS_COLUMNS_PREDICTING_PHASE
-from utils.constants import  MANDATORY_FEATURES_SET # a supprimer
 from utils.utils_logistic_regression import write_output_predictions
 
 class Tester():
@@ -29,24 +28,27 @@ class Tester():
                 raise Exception(f'Feature {feature} type in testing must be the same as in training !')    
         return True
     
-    # TERMINER CA et Le scatter plot
     def ft_standardize_data(self) -> None:
-        """"
-            This functions takes a matrix and returns a tuple of calculated elements : 
-            the matrix std and mean, and the standardized matrix to operate. 
         """
-        print(self.constants_stand)
-        # mx_std = self.constants_stand
-        # mx_mean = self.constants_stand
-        # self.prediction_dataset = (self.prediction_dataset - mx_mean) / mx_std
-    
+        Standardize the prediction dataset using the constants in self.constants_stand.
+        """
+        constants = self.constants_stand.set_index("Feature")
+        mx_mean = constants["Mean"]
+        mx_std = constants["Std"]
+        features_to_standardize = [f for f in self.prediction_dataset.columns if f in mx_mean.index]
+        for feature in features_to_standardize:
+            self.prediction_dataset[feature] = (
+                self.prediction_dataset[feature] - mx_mean[feature]
+            ) / mx_std[feature]
+
     def ft_prepare_prediction_dataset(self):
         self.df = self.df.drop(columns=USELESS_COLUMNS_PREDICTING_PHASE)
         for feature in TRAINING_FEATURES_LIST:
             self.prediction_dataset[feature] = self.df[feature]
         self.prediction_dataset.fillna(self.prediction_dataset.mean(), inplace=True) # Imputation
-        # print(self.prediction_dataset.head())
+        print(self.prediction_dataset)
         self.ft_standardize_data()
+        print(self.prediction_dataset)
 
     def ft_stable_sigmoid(self, x):
         return np.where(x >= 0, 1 / (1 + np.exp(-x)), np.exp(x) / (1 + np.exp(x)))
@@ -78,18 +80,16 @@ def main(parsed_args):
         standards = upload_csv(parsed_args.standard_file)
         if df is None or thetas is None: return
         try:
-            tester=Tester(df, thetas, standards)    
+            tester=Tester(df, thetas, standards)
             if tester.ft_is_valid_testing_dataframe():
                 tester.ft_prepare_prediction_dataset()
                 predictions = tester.ft_predict()
-                # print(predictions)
             write_output_predictions(predictions)
 
         except Exception as e:
             print(f'Something happened : {e}')
     except Exception as e:
         print(f'Something happened again: {e}')
- 
 
 if __name__ == "__main__":
     parser=argparse.ArgumentParser()

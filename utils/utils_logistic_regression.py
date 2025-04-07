@@ -27,6 +27,7 @@ def write_output_constants_standard(mean_const: pd.Series, std_const: pd.Series)
     with open(output_file, mode='w', newline = '') as file:
         writer = csv.writer(file)
         header = ['Feature', 'Mean', 'Std']
+        writer.writerow(header)
         for feature in mean_const.index:
             writer.writerow([feature, mean_const[feature], std_const[feature]])
     print(f"{output_file} is printed !")
@@ -36,13 +37,11 @@ def write_output_thetas(list_thetas: List[Dict]) -> None:
         This functions returns a file with the thetas for predictions.
     """
     output_file = "thetas.csv"
-    print(list_thetas)
     with open(output_file, mode='w', newline = '') as file:
         writer = csv.writer(file)
         courses = TRAINING_FEATURES_LIST
         header = ['Hogwarts House'] + courses
         writer.writerow(header)
-
         for house, thetas in list_thetas.items():
             writer.writerow([house] + thetas.squeeze().tolist())
     print(f"{output_file} is printed !")
