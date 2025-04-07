@@ -4,8 +4,8 @@ import argparse
 from typing import List, Tuple
 from utils.upload_csv import upload_csv
 from utils.constants import EXPECTED_LABELS, MANDATORY_FEATURES_SET, TRAINING_FEATURES_LIST
+from utils.utils_logistic_regression import log_loss, write_output_constants_standard, write_output_thetas, plot_cost_report
 from utils.maths import MyMaths
-from utils.utils_logistic_regression import log_loss, write_output_thetas, plot_cost_report
 
 class Trainer():
     
@@ -45,15 +45,15 @@ class Trainer():
         #     else:
         #         print(f'No null entry for {feature}')
         self.df.dropna(subset=self.relevant_features, inplace=True)
-        
         self.data_to_train = self.df[self.relevant_features].copy() # on fait une copie plutot qu'une reference
         self.data_train_std, self.data_train_mean, self.data_to_train= self.ft_standardize_data(self.data_to_train)
+        write_output_constants_standard(self.data_train_mean, self.data_train_std)
         self.data_to_train.insert(0, "theta0", np.ones(self.data_to_train.shape[0])) # on ajoute une colonne de 1 pour le produit scalaire (a faire pour tous les cas de reg lin ou log)
         self.ft_encode_data() # on encode a la fin pour garder les binaires 0 et 1
 
     def ft_encode_data(self):
         """"
-            This function transforms the categorical coloumn 'Hogwarts House' in a nunerical
+            This function transforms the categorical column 'Hogwarts House' in a nunerical
             column to enhance the models training.
         """
         for feature in EXPECTED_LABELS: # on ajoute les 4 colonnes de 0 pour le one-hot-encoding
@@ -70,7 +70,7 @@ class Trainer():
         mx_std = mx.apply(maths.my_std) # on applique la fonction a chaque colonne et retourne une Serie des std de chaque colonne
         mx_mean = mx.apply(maths.my_mean) # idem avec les moyennes de chaque col. apply() agir comme une boucle for
         mx_standardized = (mx - mx_mean) / mx_std
-        return [mx_std, mx_mean, mx_standardized]
+        return [mx_std, mx_mean, mx_standardized]   
     
     # fonction utilitaire utilisee pour convertir un nombre en une probabilite de 0 a 1,
     # ici 0 est "faux" et 1 est "vrai" concernant une tache de classification.

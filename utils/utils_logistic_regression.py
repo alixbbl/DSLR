@@ -1,8 +1,9 @@
 import csv
 import numpy as np
 import pandas as pd
-from typing import List, Dict
+from typing import List, Dict, Tuple
 import matplotlib.pyplot as plt
+from .constants import TRAINING_FEATURES_LIST
 
 def log_loss(y_true: pd.Series, y_pred: pd.Series) -> float:
     """
@@ -17,6 +18,18 @@ def log_loss(y_true: pd.Series, y_pred: pd.Series) -> float:
     loss_value = -np.mean(y_true * np.log(y_pred) + (1 - y_true) * np.log(1 - y_pred))
     return loss_value
 
+def write_output_constants_standard(mean_const: pd.Series, std_const: pd.Series) -> None:
+    """"
+        This functions returns a file with the datatrain mean and std for each feature,
+        to standardize the dataset_test.
+    """
+    output_file = "standardization_constants.csv"
+    with open(output_file, mode='w', newline = '') as file:
+        writer = csv.writer(file)
+        header = ['Feature', 'Mean', 'Std']
+        for feature in mean_const.index:
+            writer.writerow([feature, mean_const[feature], std_const[feature]])
+    print(f"{output_file} is printed !")
 
 def write_output_thetas(list_thetas: List[Dict]) -> None:
     """"
@@ -26,15 +39,13 @@ def write_output_thetas(list_thetas: List[Dict]) -> None:
     print(list_thetas)
     with open(output_file, mode='w', newline = '') as file:
         writer = csv.writer(file)
-        courses = ['Ancient Runes', 'Astronomy', 'Charms', 'Defense Against the Dark Arts', 'Divination', 'Herbology', 'Flying']
+        courses = TRAINING_FEATURES_LIST
         header = ['Hogwarts House'] + courses
         writer.writerow(header)
 
         for house, thetas in list_thetas.items():
             writer.writerow([house] + thetas.squeeze().tolist())
- 
     print(f"{output_file} is printed !")
-
 
 def write_output_predictions(list_predictions: List[str]) -> None:
     """
@@ -47,9 +58,7 @@ def write_output_predictions(list_predictions: List[str]) -> None:
         writer.writerow(header)
         for i, house in enumerate(list_predictions, start=0):
             writer.writerow([i, house])
-
     print(f"{output_file} is printed!")
-
 
 def plot_cost_report(list_cost_report):
     """
@@ -61,3 +70,4 @@ def plot_cost_report(list_cost_report):
     plt.ylabel("Coût")
     plt.grid(True)
     plt.show()
+
