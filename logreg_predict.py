@@ -3,7 +3,7 @@ import numpy as np
 import argparse
 from typing import List, Tuple
 from utils.upload_csv import upload_csv
-from utils.constants import EXPECTED_LABELS, TRAINING_FEATURES_LIST, USELESS_COLUMNS_PREDICTING_PHASE
+from utils.constants import TRAINING_FEATURES_LIST, USELESS_COLUMNS_PREDICTING_PHASE
 from utils.utils_logistic_regression import write_output_predictions
 
 class Tester():
@@ -45,31 +45,32 @@ class Tester():
         self.df = self.df.drop(columns=USELESS_COLUMNS_PREDICTING_PHASE)
         for feature in TRAINING_FEATURES_LIST:
             self.prediction_dataset[feature] = self.df[feature]
-        self.prediction_dataset.fillna(self.prediction_dataset.mean(), inplace=True) # Imputation
-        print(self.prediction_dataset)
+        self.prediction_dataset.fillna(self.prediction_dataset.mean(), inplace=True) # imputation par la moyenne
         self.ft_standardize_data()
-        print(self.prediction_dataset)
 
     def ft_stable_sigmoid(self, x):
         return np.where(x >= 0, 1 / (1 + np.exp(-x)), np.exp(x) / (1 + np.exp(x)))
 
     def ft_predict(self):
         X = self.prediction_dataset.copy()
-        X = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
-        X.insert(0, 'Bias', 1)  
+        X.insert(0, 'Bias', 1)
         X = X.to_numpy(dtype=float)
 
-        thetas = self.thetas.copy()
-        thetas.insert(1, 'Bias', 1)
-        thetas = thetas.iloc[:, 1:].to_numpy(dtype=float)
-        
+        thetas_df = self.thetas.copy()
+        thetas_df = thetas_df.set_index("Hogwarts House")
+        thetas_df.insert(0, "Bias", 0.0)
+
+        features = list(thetas_df.columns)
+        thetas = thetas_df[features].to_numpy(dtype=float)
+
         Z = np.dot(X, thetas.T)
         probas = self.ft_stable_sigmoid(Z)
+        hogwarts_houses = list(thetas_df.index)
         predicted_classes_indices = np.argmax(probas, axis=1)
-        hogwarts_houses = ["Gryffindor", "Hufflepuff", "Ravenclaw", "Slytherin"]
         predictions = [hogwarts_houses[i] for i in predicted_classes_indices]
 
         return predictions
+
 
 # *************************************** MAIN **************************************
 

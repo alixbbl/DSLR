@@ -1,4 +1,16 @@
-EXPECTED_LABELS = {"Gryffindor", "Hufflepuff", "Ravenclaw", "Slytherin"}
+EXPECTED_LABELS_SET = {
+                        "Gryffindor", 
+                        "Hufflepuff", 
+                        "Ravenclaw", 
+                        "Slytherin"}
+
+EXPECTED_LABELS_LIST = [
+                        "Gryffindor", 
+                        "Hufflepuff", 
+                        "Ravenclaw", 
+                        "Slytherin"
+                        ]
+
 MANDATORY_FEATURES_SET = {
                             'Arithmancy', 
                             'Astronomy', 

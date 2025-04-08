@@ -1,9 +1,10 @@
 import csv
 import numpy as np
 import pandas as pd
+import seaborn as sns
 from typing import List, Dict, Tuple
 import matplotlib.pyplot as plt
-from .constants import TRAINING_FEATURES_LIST
+from .constants import TRAINING_FEATURES_LIST, EXPECTED_LABELS_LIST
 
 def log_loss(y_true: pd.Series, y_pred: pd.Series) -> float:
     """
@@ -59,14 +60,24 @@ def write_output_predictions(list_predictions: List[str]) -> None:
             writer.writerow([i, house])
     print(f"{output_file} is printed!")
 
-def plot_cost_report(list_cost_report):
+def plot_cost_report(dict_cost_report):
     """
-        This functions print a visualization of the log loss report.
+    This functions will draw a cost report graph for each Hogwarts House, based on the training phase.
     """
-    plt.plot(list_cost_report)
-    plt.title("Evolution de la fonction de coût (Log Loss)")
-    plt.xlabel("Iterations")
-    plt.ylabel("Coût")
-    plt.grid(True)
+    sns.set_theme(style="whitegrid")
+    fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(10, 8)) # permet de decouper l'espace alloue au graphe en 4 portions egales
+    fig.tight_layout(pad=3.0)
+    
+    houses = list(dict_cost_report.keys())
+    for i, house in enumerate(houses):
+        house_data = dict_cost_report[house] # chope la data de chaque maison
+        house_data_df = pd.DataFrame(house_data, columns=["Cost"])
+        house_data_df['Iterations'] = house_data_df.index
+        house_data_df['House'] = house
+        ax = axes[i // 2, i % 2] # permet de placer le graphe au bon endroit par rappor a son ordre d'affichage
+        sns.lineplot(data=house_data_df, x='Iterations', y='Cost', ax=ax, palette='Set2')
+        ax.set_title(house, fontsize=10)
+        ax.set_xlabel('Iterations', fontsize=8)
+        ax.set_ylabel('Log loss', fontsize=8)
+    fig.suptitle("Cost evolutions for each Hogwarts house", fontsize=16) # suptitle pour "super title" => global
     plt.show()
-
