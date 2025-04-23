@@ -80,15 +80,15 @@ class MyMaths():
         :param percent: float - The percentile to calculate (between 0 and 1).
         :return: float - The calculated percentile of the column.
         """
-        sorted_values = serie.dropna().sort_values().to_numpy() # on clean si jamais
-        n = len(sorted_values)
-        if n == 0:
+        sorted_values = serie.dropna().sort_values()
+        if sorted_values.empty:
             return None
+        n = len(sorted_values)
         index = percent * (n - 1)
         lower = int(index)
         upper = lower + 1 if lower + 1 < n else lower
         weight = index - lower
-        return (1 - weight) * sorted_values[lower] + weight * sorted_values[upper]
+        return (1 - weight) * sorted_values.iloc[lower] + weight * sorted_values.iloc[upper]
 
     def my_median(self, serie: pd.Series) -> float:
         """
