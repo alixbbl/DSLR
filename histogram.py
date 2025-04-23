@@ -8,8 +8,12 @@ import seaborn as sns
 # a un cours (un eleve sera donc 13 entrees au lieu d'une)
 def transform_data(data: pd.DataFrame) -> pd.DataFrame:
     """"
-    This function converts the dataset to facilitate the plotting, each student becames an entry, a 
-    column "Course" is created. Returns a new dataset.
+    This function transforms the input DataFrame by dropping unnecessary columns 
+    and melting the DataFrame to create a format suitable for plotting.
+
+    :param data: pd.DataFrame - The dataset to transform.
+    :return: pd.DataFrame - The transformed dataset.
+
     """
     columns_to_drop = ['Index', 'First Name', 'Last Name', 'Birthday', 'Best Hand']
     data_clean = data.drop(columns=columns_to_drop) # on supprime la data inutile
