@@ -20,8 +20,6 @@ def upload_csv(filepath: str) -> pd.DataFrame:
         return data
     except FileNotFoundError:
         raise FileNotFoundError(f"File not found: {filepath}")
-    except pd.errors.EmptyDataError:
-        raise ValueError("The CSV file is empty or unreadable.")
     except pd.errors.ParserError:
         raise ValueError("Error parsing the CSV file. Check its format.")
     except Exception as e:
