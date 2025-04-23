@@ -36,8 +36,6 @@ class MyMaths():
         if clean_serie.empty:
             return None
         n = len(clean_serie)
-        if n == 0:
-            return n
         mean = self.my_mean(clean_serie)
         var = sum((x - mean) **2 for x in clean_serie) / n
         return math.sqrt(var)
