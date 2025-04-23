@@ -53,8 +53,6 @@ def display_histograms(data_melted: pd.DataFrame) -> None:
 def main(parsed_args):
     filepath = parsed_args.path_csv_to_read
     data = upload_csv(filepath)
-    if data['Hogwarts House'].dropna().empty:
-        raise ValueError("Houses have not been assigned.") # evite de travailler un dataset de type test
     data_melted = transform_data(data)
     display_histograms(data_melted)
 
