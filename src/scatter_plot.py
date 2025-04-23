@@ -1,9 +1,9 @@
 import pandas as pd
 import argparse
-from utils.upload_csv import upload_csv
-import matplotlib.pyplot as plt
 import seaborn as sns
+import matplotlib.pyplot as plt
 from typing import List
+from utils.upload_csv import upload_csv
 from utils.constants import EXPECTED_LABELS_LIST
 
 # Ce code doit permettre à l'utilisateur de visualiser si, par exemple, les élèves de Gryffondor 
