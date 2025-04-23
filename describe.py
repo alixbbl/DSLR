@@ -19,7 +19,7 @@ def do_the_maths(numeric_data: pd.DataFrame) -> pd.DataFrame:
         '75%',
         'Max',
         ]
-    col_fields = [name for name in numeric_data.columns if name != "Index"]
+    col_fields = [name for name in numeric_data.columns]
     describe_df = pd.DataFrame(index=row_fields, columns=col_fields)
 
     for feature in col_fields:
@@ -45,9 +45,10 @@ def main(parsed_args):
     data=upload_csv(filepath)
     # print(data.dtypes)
     numeric_data = data.select_dtypes(include=['float','int'])
-    if 'Hogwarts House' in numeric_data.columns:
-        numeric_data = numeric_data.drop('Hogwarts House', axis=1)
-    # print(numeric_data.shape)
+    if 'Index' in numeric_data.columns:
+        numeric_data = numeric_data.drop('Index', axis=1)
+    if numeric_data.empty:
+        raise ValueError("No numeric data found in the CSV file.")
     to_display = do_the_maths(numeric_data)
     print(to_display)
 
@@ -55,7 +56,6 @@ def main(parsed_args):
 if __name__ == "__main__":
     parser=argparse.ArgumentParser()
     parser.add_argument('path_csv_to_read',
-                        nargs='?',
                         type=str,
                         help="""CSV file to read""")
     parsed_args=parser.parse_args()

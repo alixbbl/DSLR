@@ -4,7 +4,10 @@ import pandas as pd
 # on peut donc se focus sur les erreurs systeme et le parsing, en utilisant directement pd.read_csv() et ses options
 def upload_csv(filepath: str) -> pd.DataFrame:
     """
-    This function loads a CSV file from a given path and returns a DataFrame.
+    This function loads a CSV file from the given path and returns a DataFrame.
+
+    :param filepath: str - The path to the CSV file.
+    :return: pd.DataFrame - The loaded DataFrame.
     """
     if not filepath.endswith('.csv'):
         raise ValueError("Invalid file format. Please provide a CSV file.")
@@ -17,8 +20,6 @@ def upload_csv(filepath: str) -> pd.DataFrame:
         return data
     except FileNotFoundError:
         raise FileNotFoundError(f"File not found: {filepath}")
-    except pd.errors.EmptyDataError:
-        raise ValueError("The CSV file is empty or unreadable.")
     except pd.errors.ParserError:
         raise ValueError("Error parsing the CSV file. Check its format.")
     except Exception as e:
