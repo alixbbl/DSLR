@@ -44,7 +44,7 @@ def main(parsed_args):
     filepath=parsed_args.path_csv_to_read
     data=upload_csv(filepath)
     # print(data.dtypes)
-    numeric_data = data.select_dtypes(include=['float','int'])
+    numeric_data = data.select_dtypes(include="number")
     if 'Index' in numeric_data.columns:
         numeric_data = numeric_data.drop('Index', axis=1)
     if numeric_data.empty:
