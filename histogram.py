@@ -16,9 +16,8 @@ def transform_data(data: pd.DataFrame) -> pd.DataFrame:
 
     """
     columns_to_drop = ['Index', 'First Name', 'Last Name', 'Birthday', 'Best Hand']
-    data_clean = data.drop(columns=columns_to_drop) # on supprime la data inutile
-    data_melted = pd.melt(data_clean, id_vars=["Hogwarts House"], var_name="Course", value_name="Score") # Usage de melt()
-    # print(data_melted.head())
+    data_clean = data.drop(columns=columns_to_drop) 
+    data_melted = pd.melt(data_clean, id_vars=["Hogwarts House"], var_name="Course", value_name="Score")
     return data_melted
 
 def display_histograms(data_melted: pd.DataFrame) -> None:
