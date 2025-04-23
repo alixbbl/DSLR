@@ -4,8 +4,9 @@ from utils.upload_csv import upload_csv
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# Ici melt() va simplifier et fondre le dataset pour autant d'entrees qu'il y a de scores 
-# a un cours (un eleve sera donc 13 entrees au lieu d'une)
+# Ici melt() va simplifier et fondre le dataset pour autant d'entrees qu'il y a 
+# de matieres (et donc de scores) 
+# un eleve sera donc 13 entrees au lieu d'une 
 def transform_data(data: pd.DataFrame) -> pd.DataFrame:
     """"
     This function transforms the input DataFrame by dropping unnecessary columns 
