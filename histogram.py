@@ -38,8 +38,8 @@ def display_histograms(data_melted: pd.DataFrame) -> None:
         ax.set_ylabel('Frequency', fontsize=8)
         legend = ax.get_legend()
         if legend:
-            legend.set_title("Poudlard Houses")  # Titre de la légende
-            legend.get_title().set_fontsize(8)  # Taille du titre
+            legend.set_title("Poudlard Houses") 
+            legend.get_title().set_fontsize(8)  
             for text in legend.get_texts():
                 text.set_fontsize(7)
     total_plots = len(courses)
