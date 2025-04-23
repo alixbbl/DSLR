@@ -100,9 +100,17 @@ class MyMaths():
         return self.percentile(serie, 0.50)
 
     def my_25percentile(self, serie: pd.Series) -> float:
-        """Returns the 25th percentile."""
+        """Returns the 25th percentile.
+        
+        :param serie: pd.Series - The column to calculate the 25th percentile from.
+        :return: float - The 25th percentile of the column.
+        """
         return self.percentile(serie, 0.25)
 
     def my_75percentile(self, serie: pd.Series) -> float:
-        """Returns th 75th percentile."""
+        """Returns th 75th percentile.
+        
+        :param serie: pd.Series - The column to calculate the 75th percentile from.
+        :return: float - The 75th percentile of the column.
+        """
         return self.percentile(serie, 0.75)
