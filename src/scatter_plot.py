@@ -42,7 +42,6 @@ def scatter_plot_correlation_matrix(correlation_df: pd.DataFrame, threshold: flo
     :return: None
     """
     courses = correlation_df.columns
-    plt.figure(figsize=(10, 8))
     plot_count = 0
     
     # Iterate through pairs of courses
@@ -101,6 +100,7 @@ def scatter_plot_correlation_matrix(correlation_df: pd.DataFrame, threshold: flo
                 )
                 
                 plt.tight_layout()
+                plt.show()
                 plt.savefig(f'{LOG_DIR}/{course1}_vs_{course2}.png')
                 plt.close()
 
