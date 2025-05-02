@@ -30,6 +30,10 @@ def calculate_statistics(numeric_data: pd.DataFrame) -> pd.DataFrame:
         '50%',
         '75%',
         'Max',
+        'Count NaN',
+        'Percent NaN',
+        'Variance',
+        'Range',
         ]
     statistics_df = pd.DataFrame(index=row_fields, columns=numeric_data.columns)
 
@@ -43,7 +47,11 @@ def calculate_statistics(numeric_data: pd.DataFrame) -> pd.DataFrame:
             maths.my_25percentile(serie),
             maths.my_median(serie),
             maths.my_75percentile(serie),
-            maths.my_max(serie)
+            maths.my_max(serie),
+            maths.my_count_nan(serie),
+            maths.my_percent_nan(serie),
+            maths.my_var(serie),
+            maths.my_range(serie)
         ]
         statistics_df[column]=statistics
     

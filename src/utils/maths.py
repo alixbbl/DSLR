@@ -15,6 +15,29 @@ class MyMaths():
         else:
             return [x for x in data if x is not None and not (isinstance(x, float) and math.isnan(x)) and isinstance(x, (int, float))]
     
+    def my_count_nan(self, serie: pd.Series) -> float:
+        """
+        This function counts the number of null entries in a column.
+
+        :param serie: pd.Series - The column to count null entries from.
+        :return: int - The count of null entries.
+        """
+        list_null = [ele for ele in serie if pd.isnull(ele)]
+        return len(list_null)
+    
+    def my_percent_nan(self, serie: pd.Series) -> float:
+        """
+        This function calculates the percentage of null entries in a column.
+
+        :param serie: pd.Series - The column to calculate the percentage of null entries from.
+        :return: float - The percentage of null entries.
+        """
+        count_nan = self.my_count_nan(serie)
+        count_total = self.my_count(serie)
+        if count_total == 0:
+            return 0
+        return (count_nan / count_total) * 100
+    
     
     def my_count(self, serie: pd.Series) -> float:
         """"
@@ -46,7 +69,7 @@ class MyMaths():
         :return: float - The standard deviation of the column.
         """
         clean_serie = self._clean_data(serie)
-        if not clean_data:
+        if not clean_serie:
             return None
         n = len(clean_serie)
         mean = self.my_mean(clean_serie)
@@ -142,3 +165,15 @@ class MyMaths():
         variance = sum_squared_diff / len(data_clean)
         
         return variance
+    
+    def my_range(self, data: pd.Series) -> float:
+        """
+        This function returns the range of a columnn entries.
+
+        :param data: pd.Series - The column to calculate the range from.
+        :return: float - The range of the column.
+        """
+        clean_data = self._clean_data(data)
+        if not clean_data:
+            return None
+        return self.my_max(clean_data) - self.my_min(clean_data)
