@@ -2,6 +2,19 @@ import pandas as pd
 import math
 
 class MyMaths():
+
+    def _clean_data(self, data: pd.Series | list) -> list:
+        """
+        Helper function to clean data regardless of input type.
+        
+        :param data: Union[pd.Series, List] - Input data
+        :return: List - Cleaned list without NaN or None values
+        """
+        if isinstance(data, pd.Series):
+            return data.dropna().tolist()
+        else:
+            return [x for x in data if x is not None and not (isinstance(x, float) and math.isnan(x)) and isinstance(x, (int, float))]
+    
     
     def my_count(self, serie: pd.Series) -> float:
         """"
@@ -13,17 +26,17 @@ class MyMaths():
         list_non_null = [ele for ele in serie if pd.notnull(ele)]
         return len(list_non_null)
 
-    def my_mean(self, serie: pd.Series) -> float:
+    def my_mean(self, data: pd.Series|list) -> float:
         """
-        This function returns the means of a columnn entries.
+        Calculate the mean of the data.
 
-        :param serie: pd.Series - The column to calculate the mean from.
-        :return: float - The mean of the column.
+        :param data: Union[pd.Series, List] - The data to calculate the mean from
+        :return: float - The mean of the data
         """
-        clean_serie = serie.dropna()
-        if clean_serie.empty:
+        clean_data = self._clean_data(data)
+        if not clean_data:
             return None
-        return sum(clean_serie) / len(clean_serie) if len(clean_serie) > 0 else None
+        return sum(clean_data) / len(clean_data)
 
     def my_std(self, serie: pd.Series) -> float:
         """"
@@ -32,42 +45,40 @@ class MyMaths():
         :param serie: pd.Series - The column to calculate the standard deviation from.
         :return: float - The standard deviation of the column.
         """
-        clean_serie = serie.dropna()
-        if clean_serie.empty:
+        clean_serie = self._clean_data(serie)
+        if not clean_data:
             return None
         n = len(clean_serie)
         mean = self.my_mean(clean_serie)
         var = sum((x - mean) **2 for x in clean_serie) / n
         return math.sqrt(var)
 
-    def my_min(self, serie: pd.Series) -> float:
+    def my_min(self, data: pd.Series) -> float:
         """
         This function returns the minimum of a columnn entries.
 
-        :param serie: pd.Series - The column to calculate the minimum from.
+        :param data: pd.Series - The column to calculate the minimum from.
         :return: float - The minimum of the column.
         """
-        clean_serie=serie.dropna()
-        if clean_serie.empty:
+        clean_data = self._clean_data(data)
+        if not clean_data:
             return None
-        ele_min = clean_serie[0]
-        for ele in clean_serie:
+        ele_min = clean_data[0]
+        for ele in clean_data:
             if ele < ele_min:
                 ele_min = ele
         return ele_min
 
-    def my_max(self, serie: pd.Series) -> float:
+    def my_max(self, data: pd.Series) -> float:
         """
         This function returns the maximum value of a columnn entries.
 
         :param serie: pd.Series - The column to calculate the maximum from.
         :return: float - The maximum of the column.
         """
-        clean_serie=serie.dropna()
-        if clean_serie.empty:
-            return None
-        ele_max = clean_serie[0]
-        for ele in clean_serie:
+        clean_data = self._clean_data(data)
+        ele_max = clean_data[0]
+        for ele in clean_data:
             if ele > ele_max:
                 ele_max = ele
         return ele_max
@@ -114,3 +125,20 @@ class MyMaths():
         :return: float - The 75th percentile of the column.
         """
         return self.percentile(serie, 0.75)
+
+    def my_var(self, data):
+        """
+        Calculate the variance of a dataset.
+        
+        Variance is the average of squared deviations from the mean.
+        Formula: var(X) = (1/n) * Σ(x_i - mean(X))²
+        
+        :param data: array-like - The dataset to calculate variance for
+        :return: float - The variance of the dataset
+        """
+        data_clean = self._clean_data(data)
+        mean = self.my_mean(data_clean)
+        sum_squared_diff = sum((x - mean) ** 2 for x in data_clean)
+        variance = sum_squared_diff / len(data_clean)
+        
+        return variance
