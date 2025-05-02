@@ -133,6 +133,13 @@ By default, it uses Pearson correlation, which measures linear relationships bet
 
 ## From this visualization, what features are you going to use for your logistic regression? (Pair plot) 
 
+We can see here that interesting features are Herbology for example which allows us to really distinguish students from different houses. 
+
+<p align="center">
+  <img src="./assets/pair_plot.png" />
+</p>
+
+
 # Logistic Regression OnevsAll
 
 ## Train

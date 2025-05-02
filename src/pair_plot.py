@@ -7,19 +7,15 @@ import seaborn as sns
 
 def clean_data(data: pd.DataFrame) -> pd.DataFrame:
     data_num = data.select_dtypes(include=['float', 'int'])
-    data_num.drop('Index', axis=1, inplace=True) 
-    # a ce stade on a perdu les maisons, il faut donc les remettre
+    if "Index" in data:
+        data_num.drop('Index', axis=1, inplace=True) 
     house_data = data['Hogwarts House']
     data_num['Hogwarts House'] = house_data
     return data_num
 
-# Fignoler le resultat car pas de visibilite sur le Mac (trop faible) => readapter pour 42 pour corrections
 def display_pair_plot(data_num: pd.DataFrame) -> None:
-    
     colors = {'Gryffindor': '#8B0000', 'Hufflepuff': '#B8860B', 'Ravenclaw': '#00008B', 'Slytherin': '#006400'}
-    pair_plot = sns.pairplot(data_num, hue='Hogwarts House', palette=colors, height=1.0, aspect=1.0)
-    pair_plot.figure.set_size_inches(14, 10)
-    plt.subplots_adjust(top=0.95, right=0.95, left=0.05, bottom=0.05)
+    pair_plot = sns.pairplot(data_num, hue='Hogwarts House', vars=["Arithmancy", "Astronomy", "Herbology", "Care of Magical Creatures", "Divination", "Defense Against the Dark Arts", "Transfiguration"])
     for ax in pair_plot.axes.flatten():
         ax.set_xticklabels([])
         ax.set_yticklabels([])
@@ -34,17 +30,12 @@ def display_pair_plot(data_num: pd.DataFrame) -> None:
     plt.show()
 
 
-# Enlever une des variables correlees (Defense against) - a choisir l'une des var.
-
-
 # **************************** MAIN *******************************
 
 def main(parsed_args):
     data = upload_csv(parsed_args.path_csv_to_read)
     if data is None: 
         return
-    if data['Hogwarts House'].dropna().empty:
-        raise ValueError("Houses have not been assigned.")
     data = clean_data(data)
     display_pair_plot(data)
 
