@@ -75,7 +75,10 @@ def main(args):
     numeric_data = prepare_numeric_data(pre_processed_data) 
     statistics = calculate_statistics(numeric_data)
     
-    print(statistics)
+    pre_processed_data = pre_processed_data.drop(columns=['Index'])
+
+    print(pre_processed_data.head())
+
     store_df_to_csv(pre_processed_data, "pre_processed_data", LOG_DIR, FLOAT_FORMAT)
     store_df_to_csv(statistics, "statistics", LOG_DIR, FLOAT_FORMAT)
 
