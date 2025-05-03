@@ -65,7 +65,13 @@ Firstly, we simply generated a histogram using seaborn. We get the following whi
   <img src="./assets/nonhomogeneous.png" width = "500" height="400" />
 </p>
 
-We had to switch the dataset from having one row per student to get one row per grade in a 
+Tried something by preprocessing Birthday and Best Hand but it is too homogeneous to be relevant. 
+
+<p align="center">
+  <img src="./assets/agehand.png" width = "500" height="400" />
+</p>
+
+
 
 </details>
 
@@ -207,3 +213,4 @@ Stochastic Gradient Descent uses just one randomly selected training example to 
 Mini-Batch Gradient Descent uses small random batches of training examples to compute gradients.
 
 
+A comparaison of them all [here](https://medium.com/@amannagrawall002/batch-vs-stochastic-vs-mini-batch-gradient-descent-techniques-7dfe6f963a6f).

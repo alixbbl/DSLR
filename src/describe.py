@@ -80,14 +80,9 @@ def main(args):
     
     numeric_data = prepare_numeric_data(data) 
     statistics = calculate_statistics(numeric_data)
-    
-    pre_processed_data = pre_processed_data.drop(columns=['Index'])
 
-    print(pre_processed_data.head())
-
-    store_df_to_csv(pre_processed_data, "pre_processed_data", LOG_DIR, FLOAT_FORMAT)
+    print(statistics)
     store_df_to_csv(statistics, "statistics", LOG_DIR, FLOAT_FORMAT)
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate descriptive statistics for a dataset")

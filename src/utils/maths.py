@@ -149,7 +149,7 @@ class MyMaths():
         """
         return self.percentile(serie, 0.75)
 
-    def my_var(self, data):
+    def my_var(self, data: pd.Series) -> float:
         """
         Calculate the variance of a dataset.
         

@@ -213,15 +213,18 @@ def main(parsed_args):
     columns_to_drop = ['Index', 'First Name', 'Last Name', 'Birthday', 'Best Hand']
     data = data.drop(columns=columns_to_drop)
     
+    #Solution 0
     # data_melted = transform_data(data)
     # store_df_to_csv(data_melted, "dataset_histogram", LOG_DIR, 2)
     # display_histograms(data_melted)
     
+    #Solution 1
     display_histograms_without_melting(data)
 
-    metrics = identify_course_homogeneity(data)
-    plot_homogeneity_max_min(data, metrics, LOG_DIR)
-    store_homogeneity_metrics(metrics, LOG_DIR)
+    #Solution 2
+    # metrics = identify_course_homogeneity(data)
+    # plot_homogeneity_max_min(data, metrics, LOG_DIR)
+    # store_homogeneity_metrics(metrics, LOG_DIR)
 
 
 if __name__ == "__main__":
