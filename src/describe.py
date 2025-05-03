@@ -3,7 +3,6 @@ from pathlib import Path
 import argparse
 from utils.upload_csv import upload_csv
 from utils.maths import MyMaths
-from utils.pre_process import pre_process_df
 from utils.store import store_df_to_csv
 from typing import Any
 
@@ -78,9 +77,8 @@ def main(args):
     LOG_DIR.mkdir(parents=True, exist_ok=True)
 
     data=upload_csv(args.path_csv_to_read)
-    pre_processed_data = pre_process_df(data, LOG_DIR)
     
-    numeric_data = prepare_numeric_data(pre_processed_data) 
+    numeric_data = prepare_numeric_data(data) 
     statistics = calculate_statistics(numeric_data)
     
     pre_processed_data = pre_processed_data.drop(columns=['Index'])
