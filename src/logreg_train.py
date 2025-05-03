@@ -31,24 +31,24 @@ class LogisticRegressionTrainer():
         self.b = 0.0
 
         
-    def sigmoid(self, z):
+    def sigmoid(self, z: np.ndarray):
         """Sigmoid activation function"""
         return 1 / (1 + np.exp(-z))
         
-    def forward(self, X):
+    def forward(self, X: np.ndarray):
         """Computes forward propagation for given input X."""
         Z = np.matmul(X, self.W) + self.b
         A = self.sigmoid(Z)
         return A
     
-    def compute_cost(self, predictions):
+    def compute_cost(self, predictions: np.ndarray):
         """Compute binary cross-entropy loss"""
         m = self.X.shape[0]  
         cost = np.sum((-np.log(predictions + 1e-8) * self.y) + (-np.log(1 - predictions + 1e-8)) * (1 - self.y))
         cost = cost / m
         return cost
     
-    def compute_gradient(self, predictions):
+    def compute_gradient(self, predictions: np.ndarray):
         """Computes the gradients for the model using given predictions."""
         
         m = self.X.shape[0]
@@ -155,7 +155,7 @@ def prepare_data(data: pd.DataFrame):
 # ************************************* START / END  **************************************
 
 
-def launch_trainer(X, y):
+def launch_trainer(X: pd.Series, y: pd.Series):
         """Train one-vs-all logistic regression models"""
         models = {}
         
@@ -168,7 +168,7 @@ def launch_trainer(X, y):
         
         return models
 
-def save_model_weights(models, feature_names):
+def save_model_weights(models: dict, feature_names: list):
     """Save model weights and parameters to files"""    
     all_params = {}
     
