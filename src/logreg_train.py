@@ -28,7 +28,9 @@ class LogisticRegressionTrainer():
     def initialize_parameter(self):
         """Initializes the parameters of the model."""
         self.W = np.zeros(self.X.shape[1])
+        # print(self.W)
         self.b = 0.0
+        # print(self.b)
 
         
     def sigmoid(self, z: np.ndarray):
@@ -73,7 +75,6 @@ class LogisticRegressionTrainer():
             self.cost_history.append(cost)
             
             if self.optimization == "gradient_descent":
-                predictions = self.forward(self.X)
                 self.compute_gradient(predictions)                
                 cost = self.compute_cost(predictions)
                 self.cost_history.append(cost)
@@ -160,7 +161,7 @@ def launch_trainer(X: pd.Series, y: pd.Series):
         models = {}
         
         for house in HOGWART_HOUSES:
-            print(f"Training model for {house}...")
+            print(f"\nTraining model for {house}...")
             y_binary = (y == house).astype(int) 
             model = LogisticRegressionTrainer(learning_rate=0.1, max_iterations=1000)
             model.fit(X, y_binary)
@@ -207,13 +208,13 @@ def main():
     data = upload_csv(params.training_data_path)
     
     try:
-        print("Preparing data...")
+        print("Preparing data\n")
         X_train, X_test, y_train, y_test = prepare_data(data)
 
-        print("Training models...")
+        print("Training models\n")
         models = launch_trainer(X_train, y_train)
         
-        print("Saving model parameters...")
+        print("\nSaving model parameters")
         save_model_weights(models, TRAINING_FEATURES)
     
     except Exception as e:

@@ -16,47 +16,38 @@ A Hogwarts student dataset with the following columns, that we've splitted into 
 
 * Course scores: Arithmancy, Astronomy, Herbology, Defense Against the Dark Arts, Divination, Muggle Studies, Ancient Runes, History of Magic, Transfiguration, Potions, Care of Magical Creatures, Charms, Flying
 
-<details> <summary> Librairies used</summary>
-The main librairies for vizualisation are matplotlib (foundation) and seaborn which is built on matplotlib but it is more suited to statistical visualisations and it has great aesthetics. Plus, the syntax is less complex. Pandas has built in plotting but is too simple for what we are being asked to produce.
-</details>
+The main librairies for vizualisation are matplotlib (foundation) and seaborn which is built on matplotlib but it is more suited to statistical visualisations and it has great aesthetics. Plus, the syntax is less complex. Pandas has built in plotting but it is too simple for what we are being asked to produce.
 
-# Pre-process our dataset (describe.py)
+## Data Visualisation
+ 
+We start by calculating the statistics of our preprocessed dataset which can be found in `output/describe/statistics.csv`. Quelques notions de statistiques utiles :    
 
-Since we can eventually only handle numeric data in our visualisatoins, let's transform the dataset to keep relevant informations but have them as numeric informations :
-- turn birthdays into a new column age
-- turn best hand into a new column hand binary with 0 for left-handed and 1 for right-handed
+✅ MEAN : La moyenne, la somme des valeurs divisee par le nombre de ces valeurs.
 
-<details> <summary> CSV File tip</summary>
+✅ STD ou Ecart-type : C'est la mesure de dispersion des donnees par rapport a la moyenne de ces donnees. Plus un STD est grand, plus les donnees son eclatees par rapport a leur moyenne.
+
+✅ Quartiles : Ils divisent un ensemble de donnees en 4 parties egales : jusqu'a 25%, 50%, 75% et 100%.  Cela permet d'avoir une idee de la distribution des valeurs du dataset.
+
+<details>
+<summary><h5 style="display: inline; margin: 0;" >CSV File tip</h5></summary>   
+
 Download the extension "Rainbow CSV" and at the bottom of the IDE there's a clickable addon **align** so you can visualise them better. Don't forget to remove it and switch it back to **shrink** as it will invalidate any further parsing (it adds spaces). Shrink vs Align : 
 
 <p align="center">
-  <img src="./assets/shrink.png" width="400" height="400"/>
-  <img src="./assets/align.png" width="400" height="400"/>
+  <img src="./assets/shrink.png" width="400" height="200"/>
+  <img src="./assets/align.png" width="400" height="200"/>
 </p>
 
-</details>
+</details>  
 
-Eventually, we calculate the statistics of our preprocessed dataset which can be found in `output/describe/statistics.csv`. Quelques notions de statistiques utiles :
-
-✅ MEAN : 
-La moyenne, la somme des valeurs divisee par le nombre de ces valeurs.
-
-✅ STD ou Ecart-type :
-C'est la mesure de dispersion des donnees par rapport a la moyenne de ces donnees.
-Plus un STD est grand, plus les donnees son eclatees par rapport a leur moyenne.
-
-✅ Quartiles :
-Ils divisent un ensemble de donnees en 4 parties egales : jusqu'a 25%, 50%, 75% et 100%. 
-Cela permet d'avoir une idee de la distribution des valeurs du dataset.
-
-
-<details> <summary> Which Hogwarts course has a homogeneous score distribution between all four houses? (Histogram) </summary>
+<details>
+<summary><h4 style="display: inline; margin: 0;"> 1. Which Hogwarts course has a homogeneous score distribution between all four houses? (Histogram)</h4></summary>
 
 A histogram is a graphical representation that organizes data into continuous intervals or "bins," displaying the frequency or count of observations within each bin. A great ressource [here](https://www.coursera.org/fr-FR/articles/what-is-a-histogram).
 
 A "homogeneous score distribution between all four houses" means the score distributions are similar across all houses. This is actually the *opposite* of what we want for effective classification. For good classification, we want features where each house shows distinct patterns.
 
-<details> <summary>SOLUTION 1 : Simple histogram</summary>
+<details><summary>SOLUTION 1 : Simple histogram</summary>
 
 Firstly, we simply generated a histogram using seaborn. We get the following which displays quite obvisouly courses in which students' grades are homogeneous vs non-homogenous : 
 
@@ -73,7 +64,7 @@ Tried something by preprocessing Birthday and Best Hand but it is too homogeneou
 
 </details>
 
-<details> <summary>SOLUTION 2 : Use F-RATIO, a homogeneity metric </summary>
+<details><summary>SOLUTION 2 : Use F-RATIO, a homogeneity metric </summary>
 
 - Between-Group Variance: Measures how different the house means are from each other for a given course. Higher values indicate greater differences between houses.
 - Within-Group Variance: Measures how much scores vary within each house. Lower values indicate more consistency within houses.
@@ -81,7 +72,7 @@ Tried something by preprocessing Birthday and Best Hand but it is too homogeneou
 
 The course with the lowest F-ratio would be considered the most homogeneous, as this indicates minimal differences between houses relative to the variation within houses.
 
-<details> <summary> An example that explains F-Ratio </summary>
+<details><summary> An example that explains F-Ratio </summary>
 Scenario 1:
 
 Course A: House means are [70, 72, 73, 71]
@@ -118,7 +109,8 @@ High F-ratio: Indicates significant differences between houses (heterogeneous)
 </details> 
 
 
-<details> <summary> What are the two features that are similar ? (Scatter plots) </summary>
+<details>
+<summary><h4 style="display: inline; margin: 0;"> 2. What are the two features that are similar ? (Scatter plots)</h4></summary>
 A scatter plot allows you to visualize relationships between two variables. Its name comes from the graph's design—it looks like a collection of dots scattered across an x- and y-axis. A great ressource [here](https://www.coursera.org/articles/what-is-a-scatter-plot).
 
 The correlation coefficient measures the statistical relationship between two variables. We use corr() on our dataset (only on the numeric values) to find which subjects are closest. The corr() function in pandas computes pairwise correlation between columns, returning a correlation matrix that shows how each variable relates to every other variable. Range of Values:
@@ -139,19 +131,25 @@ By default, it uses Pearson correlation, which measures linear relationships bet
 
 </details> 
 
-<details> ## From this visualization, what features are you going to use for your logistic regression? (Pair plot) 
+<details>
+<summary><h4 style="display: inline; margin: 0;">  3. From this visualization, what features are you going to use for your logistic regression? (Pair plot) </h4></summary> 
 
 We can see here that interesting features are Herbology for example which allows us to really distinguish students from different houses. 
 
 <p align="center">
   <img src="./assets/pair_plot.png" />
 </p>
-
 </details> 
+    
+    
+## Logistic Regression OnevsAll    
 
-# Logistic Regression OnevsAll
+<details>
+<summary><h3 style="display: inline; margin: 0">Overview</h2></summary>
 
-<details> <summary> ## Train
+<p align="center">
+  <img src="./assets/project.png" />
+</p>
 
 Inherently, machine learning models are binary classifiers. Logistic regression is a supervised machine learning algorithm used for classification tasks where the goal is to predict the probability that an instance belongs to a given class or not.
 
@@ -167,9 +165,10 @@ So in our case, there are 4 different "classes" which corresponds to the 4 diffe
 
 </details>
 
-<details> <summary> STEP BY STEP </summary>
+<details>
+<summary><h3 style="display: inline; margin: 0;"> Step by Step </h2></summary>
 
-1. Standardizing our data 
+<h4>Standardizing our data</h4>
 
 Standardization is a preprocessing technique used in machine learning to rescale and transform the features (variables) of a dataset to have a mean of 0 and a standard deviation of 1. For each data point (sample), subtract the mean (μ) of the feature and then divide by the standard deviation (σ) of the feature. 
 
@@ -177,18 +176,11 @@ Standardization is a preprocessing technique used in machine learning to rescale
  Standardized value = x − μ / σ
 </p>
 
-2. Splitting our data into a train_set and a test_test 
+<h4>Train each binary classifier</h4>
 
-Here, we're using scikit learn's method `train_test_split` to set aside 20% of our dataset for test. 
+Logistic regression is a widely used model in machine learning for binary classification tasks. It models the probability that a given input belongs to a particular class. To train a logistic regression model, we aim to find the best values for the parameters (w,b) that best fit our dataset and provide accurate class probabilities.     
 
-3. Train each binary classifier 
-
-Logistic regression is a widely used model in machine learning for binary classification tasks. It models the probability that a given input belongs to a particular class. To train a logistic regression model, we aim to find the best values for the parameters (w,b) that best fit our dataset and provide accurate class probabilities.    
-
-The training process involves iteratively updating the weight vector (w) and bias term  
-(b) to minimize the cost function. This is typically done through an optimization algorithm like gradient descent. 
-  
-The logistic regression model function is represented as:
+The training process involves iteratively updating the weight vector (w) and bias term (b) to minimize the cost function. This is typically done through an optimization algorithm like gradient descent. The logistic regression model function is represented as:     
 
 <p align="center">
 fw, b(x) = g(w * x + b)   
@@ -200,13 +192,15 @@ fw, b(x) = g(w * x + b)
 - x : is the input feature vector       
 - g(z) : is the sigmoid function     
 
-The Sigmoid activation function is as follows : 
+The Sigmoid activation function is as follows :    
 
 <p align="center">
 g(z) = 1 / (1 + e)^−z
 </p>
 
-# Loss : Cross entropy 
+<h3> Loss : Cross entropy </h3>
+<hr></hr>
+
 
 In general, a loss function is a mechanism to quantify how well a model’s predictions match the actual outcomes, rewarding the model for assigning higher probabilities to correct answers. With CEL : 
 
@@ -234,8 +228,8 @@ To convert these into probabilities, it is common to apply the SoftMax function 
   <img src="./assets/cel.png" width="500" height="400" />
 </p>
 
-# Optimization : 
-
+<h3> Optimization </h3>
+<hr></hr>
 The optimizers determine how the weights of the machine learning model are updated during backpropagation.
 
 <p align="center">
@@ -248,21 +242,21 @@ The gradient descent family of optimizers is one whereby our algorithm takes sma
 
 > Gradient Descent (GD) is an optimization algorithm for finding the optimal parameters of the model by iteratively updating them along the steepest direction of the loss landscape according to f(x). The drawback remains slow convergence / small updates in regions with gradual slope. 
 
-1. Gradient Descent / Batch Gradient Descent 
+1. Gradient Descent / Batch Gradient Descent    
 Gradient Descent, often called "Batch Gradient Descent," uses the entire dataset to compute the gradient at each iteration. So we go through all the training samples and we calculate cumulative error. Then we back propagate and we adjust the weights. This is good for small training sets. If we had 10 million data points, we'd have to do a forward pass on 10 million samples per feature on each epoch. -> Use **all** training samples for one forward pass and then adjust the weights. This is inefficient if we have a large training set with regular GD every update requires computing gradients for an entire dataset. T
 
-2. Stochastic Gradient Descent
+2. Stochastic Gradient Descent   
 The trick in this case is to compute the Stochastic Gradient Descent which uses just one randomly selected training example to compute the gradient at each iteration. Ressource [here](https://www.youtube.com/watch?v=vMh0zPT0tLI&t=8s). It's quite useful here to accelarate the process, and because we have lots of redundancy in the data (clusters). -> Use **one** randomly picked sample for a forward pass and then adjust the weights.
 
-3. Mini Batch Gradient Descent 
+3. Mini Batch Gradient Descent    
 If you want to take advantage of vector maths and use more data points on each iteration, you can pass x random batches instead one sanmple. Mini-Batch Gradient Descent uses small random batches of training examples to compute gradients. -> Use **a batch of** randomly picked samples for a forward pass and then adjust the weights.
 
 <h1> Momentum-based optimizers </h1>
 
-1. Momentum optimizer
+1. Momentum optimizer    
 This extends SGD by accelerating training in regions where we are descending (like a ball in physics gaining momentum). The loss takes larger steps.
 
-2. Nestrov optimizer 
+2. Nestrov optimizer     
 Same update rule as the momentum optimizer but instead of computing the gradients using the current weights, it uses a "look ahead approach" (Nestrov Accelrated Gradients, NAG). It outperforms SGD and the classical momentum. It tries to fix the "overshooting" minima extra steps momentum has to take.  
 
 To implement these, we will use Torch and Tensorflow.
@@ -275,9 +269,8 @@ To implement these, we will use Torch and Tensorflow.
 
 A mix of both the above (SGD + Momentum). Today, it's SOTA for machine learning models' optimizers. 
 
-1. Adam
-2. AdamW
-
+1. Adam  
+2. AdamW   
 
 <p align="center">
   <img src="./assets/adam.png" width="500" height="400" />

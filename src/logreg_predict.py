@@ -38,7 +38,7 @@ class LogisticRegressionPredictor:
         """Sigmoid activation function"""
         return 1 / (1 + np.exp(-z))
     
-    def standardize(self, df):
+    def standardize(self, df: pd.DataFrame):
         """
         Standardize features to mean=0 and std=1.
         
