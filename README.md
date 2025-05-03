@@ -156,13 +156,54 @@ The One-Versus-All (OvR) method decomposes a multi-class problem into multiple b
 
 So in our case, there are 4 different "classes" which corresponds to the 4 different Hogwarts houses : Gryffindor, Hufflepuff, Ravenclaw, Slytherin. So N = 4, and we'll need to train 4 independent classifiers.
 
+### STEP BY STEP 
 
-## Predict
+1. Standardizing our data 
 
-So we got trained our function to get the parameters (weights) which will give us the lowest cost (distance between truth and predicted). If we now predict on unseen (but labelled) data, let's see how accurate our model is. 
+Standardization is a preprocessing technique used in machine learning to rescale and transform the features (variables) of a dataset to have a mean of 0 and a standard deviation of 1. For each data point (sample), subtract the mean (μ) of the feature and then divide by the standard deviation (σ) of the feature. 
 
-Common metrics : 
-- Accuracy: Accuracy provides the proportion of correctly classified instances.
-- Precision: Precision focuses on the accuracy of positive predictions.
-- Recall (Sensitivity or True Positive Rate): Recall measures the proportion of correctly predicted positive instances among all actual positive instances.
-- F1 Score: F1 score is the harmonic mean of precision and recall.
+<p align="center">
+ Standardized value = x − μ / σ
+</p>
+
+2. Splitting our data into a train_set and a test_test 
+
+Here, we're using scikit learn's method `train_test_split` to set aside 20% of our dataset for test. 
+
+3. Train each binary classifier 
+
+Logistic regression is a widely used model in machine learning for binary classification tasks. It models the probability that a given input belongs to a particular class. To train a logistic regression model, we aim to find the best values for the parameters (w,b) that best fit our dataset and provide accurate class probabilities.    
+
+The training process involves iteratively updating the weight vector (w) and bias term  
+(b) to minimize the cost function. This is typically done through an optimization algorithm like gradient descent. 
+  
+The logistic regression model function is represented as:
+
+<p align="center">
+fw, b(x) = g(w * x + b)   
+</p>
+
+- fw,b(x) : represents the predicted probability     
+- w : is the weight vector    
+- b : is the bias term    
+- x : is the input feature vector       
+- g(z) : is the sigmoid function     
+
+The Sigmoid activation function is as follows : 
+
+<p align="center">
+g(z) = 1 / (1 + e)^−z
+</p>
+
+# Optimization : 
+
+1. Gradient Descent / Batch Gradient Descent 
+Gradient Descent, often called "Batch Gradient Descent," uses the entire dataset to compute the gradient at each iteration:
+
+2. Stochastic Gradient Descent
+Stochastic Gradient Descent uses just one randomly selected training example to compute the gradient at each iteration:
+
+3. Mini Batch Gradient Descent 
+Mini-Batch Gradient Descent uses small random batches of training examples to compute gradients.
+
+
