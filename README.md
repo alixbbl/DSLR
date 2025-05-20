@@ -279,3 +279,27 @@ A mix of both the above (SGD + Momentum). Today, it's SOTA for machine learning 
 A comparaison of them all [here](https://medium.com/@amannagrawall002/batch-vs-stochastic-vs-mini-batch-gradient-descent-techniques-7dfe6f963a6f).
 
 </details>
+
+## Quick overview of the Linear Regression and Logistic Regression methods : 
+📈 Linear Regression
+
+Goal	: Predict a continuous value (e.g., price, temperature)
+Output	: A real number (e.g., 4.2, 101.7)
+Model function	: A linear function: y = θ₀ + θ₁x
+Error metric	: Mean Squared Error (MSE), MAE, etc.
+Example	: Predicting a house price based on its size
+
+📊 Logistic Regression
+
+Goal	: Predict a probability of class membership (e.g., yes/no, 0/1)
+Output	: A probability between 0 and 1
+Model function	: A sigmoid function: σ(z) = 1 / (1 + e^(-z)), where z = θ₀ + θ₁x
+Error metric	: Log-loss (cross-entropy loss)
+Example	: Predicting whether a student is admitted (1) or not (0) based on their score
+LogReg is then the best approach to handle a multiclass binary classification task like this Hogwarts Hat problem !
+
+🧠 Key Differences
+Can linear regression be used for binary classification?	
+❌ No, because its output is unbounded
+Is logistic regression linear in parameters?	
+✅ Yes, but it passes the output through a sigmoid function
