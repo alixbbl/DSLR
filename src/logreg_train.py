@@ -22,7 +22,6 @@ class LogisticRegressionTrainer():
         self.X = X_train
         self.y = y_train
         self.cost_history = []
-
         print(f"Optimization method: {self.optimization}")
     
     def initialize_parameter(self):
@@ -31,7 +30,6 @@ class LogisticRegressionTrainer():
         # print(self.W)
         self.b = 0.0
         # print(self.b)
-
         
     def sigmoid(self, z: np.ndarray):
         """Sigmoid activation function"""
@@ -52,7 +50,6 @@ class LogisticRegressionTrainer():
     
     def compute_gradient(self, predictions: np.ndarray):
         """Computes the gradients for the model using given predictions."""
-        
         m = self.X.shape[0]
         # compute gradients
         self.dW = np.matmul(self.X.T, (predictions - self.y))
@@ -63,6 +60,11 @@ class LogisticRegressionTrainer():
         self.db = self.db * 1 / m    
 
     def fit(self, X, y):
+        """Mimics the fit function used as a builtin in ML libraries, this function will train the model using various 
+            methods : gradient descent, stochastic gradient descent or mini-batch graident descent, as requested by user.
+            :arguments : X => training features, y : target
+            :returns : None
+        """
         self.X = X
         self.y = y
         self.m = X.shape[0]
@@ -79,6 +81,7 @@ class LogisticRegressionTrainer():
                 cost = self.compute_cost(predictions)
                 self.cost_history.append(cost)
 
+            # BONUS : stochastic GD
             elif self.optimization == "stochastic_gradient_descent":
                 random_index = np.random.randint(0, self.m)
                 X_sample = self.X[random_index:random_index+1]
@@ -89,7 +92,8 @@ class LogisticRegressionTrainer():
 
                 self.dW = X_sample.T.dot(prediction_sample - y_sample)
                 self.db = np.sum(prediction_sample - y_sample)
-        
+
+            # BONUS : mini-batch GD
             elif self.optimization == "mini_batch_gradient_descent":
                 batch_size = params.batch_size
                 num_batches = int(np.ceil(self.m / batch_size))
@@ -127,29 +131,26 @@ class LogisticRegressionTrainer():
 
 # ************************************* DATE PREPROCESSING **************************************
 
-def standardize(df: pd.DataFrame) -> pd.DataFrame:
+def ft_standardize(df: pd.DataFrame) -> pd.DataFrame:
     """
     Standardize features to mean=0 and std=1.
-    
     :param df: DataFrame
     :return: standardized DataFrame
     """
     maths = MyMaths()
     std = df.apply(maths.my_std) 
     mean = df.apply(maths.my_mean)
-        
+    stats = pd.DataFrame({'mean': mean, 'std': std})
+    stats.to_csv(LOG_DIR / "standardization_params.csv")
     return (df - mean) / std
-
 
 def prepare_data(data: pd.DataFrame):
     """Clean and prepare data for training"""
     data = data.dropna(subset=TRAINING_FEATURES)
     X = data[TRAINING_FEATURES].copy()
     y = data['Hogwarts House'].copy()
-
     if params.standardize:
-        X = standardize(X)
-    
+        X = ft_standardize(X)
     return (train_test_split(X, y, test_size=params.test_size, random_state=params.seed))
         
     
@@ -159,17 +160,16 @@ def prepare_data(data: pd.DataFrame):
 def launch_trainer(X: pd.Series, y: pd.Series):
         """Train one-vs-all logistic regression models"""
         models = {}
-        
         for house in HOGWART_HOUSES:
             print(f"\nTraining model for {house}...")
-            y_binary = (y == house).astype(int) 
+            y_binary = (y == house).astype(int) # va servir a encoder le 0 ou 1 de la classe
             model = LogisticRegressionTrainer(learning_rate=0.1, max_iterations=1000)
             model.fit(X, y_binary)
-            models[house] = model
-        
+            models[house] = model 
         return models
 
 def save_model_weights(models: dict, feature_names: list):
+    print(feature_names)
     """Save model weights and parameters to files"""    
     all_params = {}
     
@@ -181,9 +181,7 @@ def save_model_weights(models: dict, feature_names: list):
             'iterations': model.max_iterations,
             'features': feature_names
         }
-        
-        all_params[house] = model_params
-        
+        all_params[house] = model_params  
         with open(LOG_DIR / f"{house}_weights.txt", 'w') as f:
             f.write(f"Model weights for {house}:\n\n")
             f.write(f"Bias: {model.b}\n\n")
@@ -194,7 +192,6 @@ def save_model_weights(models: dict, feature_names: list):
             f.write(f"\nLearning rate: {model.learning_rate}\n")
             f.write(f"Iterations: {model.max_iterations}\n")
             f.write(f"Final cost: {model.cost_history[-1] if model.cost_history else 'N/A'}\n")
-    
     np.save(LOG_DIR / "model_params.npy", all_params)
     print(f"Model weights saved to {LOG_DIR}")    
 
@@ -210,6 +207,7 @@ def main():
     try:
         print("Preparing data\n")
         X_train, X_test, y_train, y_test = prepare_data(data)
+        print(y_test.head())
 
         print("Training models\n")
         models = launch_trainer(X_train, y_train)

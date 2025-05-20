@@ -11,7 +11,16 @@ class Config():
 
     # data
     hogwart_houses = ["Gryffindor", "Hufflepuff", "Ravenclaw", "Slytherin"]
-    training_features = ["Defense Against the Dark Arts", "Herbology", "Ancient Runes", "Astronomy", "Transfiguration"]
+    # training_features = ["Defense Against the Dark Arts", "Herbology", "Ancient Runes", "Astronomy", "Transfiguration"]
+    training_features = [
+                            'Astronomy', 
+                            'Herbology', 
+                            'Divination', 
+                            'Muggle Studies', 
+                            'Ancient Runes', 
+                            'History of Magic',
+                            'Charms', 
+                            ]
     standardize = True
 
     #hyperparameters
