@@ -68,13 +68,11 @@ def display_histograms_without_melting(data: pd.DataFrame) -> None:
     # Plot each course
     for i, course in enumerate(courses):
         ax = axes[i // 4, i % 4]
-        
         # Create separate histograms for each house
         for house in data['Hogwarts House'].unique():
             house_data = data[data['Hogwarts House'] == house]
             sns.histplot(house_data[course], bins=20, label=house, ax=ax)
             
-        
         ax.set_title(course, fontsize=10)
         ax.set_xlabel('Score', fontsize=8)
         ax.set_ylabel('Nb students graded', fontsize=8)
@@ -85,6 +83,8 @@ def display_histograms_without_melting(data: pd.DataFrame) -> None:
         fig.delaxes(axes[j // 4, j % 4])
         
     fig.suptitle("Score Distribution by Course and School", fontsize=12)
+    filename = LOG_DIR / "Hogwarts_histogram.png"
+    plt.savefig(filename)
     plt.show()
 
 

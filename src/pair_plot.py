@@ -2,8 +2,10 @@ import pandas as pd
 import argparse
 from utils.upload_csv import upload_csv
 import matplotlib.pyplot as plt
-from typing import List
+from pathlib import Path
 import seaborn as sns
+
+LOG_DIR = Path("output/pair_plots")
 
 def clean_data(data: pd.DataFrame) -> pd.DataFrame:
     data_num = data.select_dtypes(include=['float', 'int'])
@@ -27,12 +29,16 @@ def display_pair_plot(data_num: pd.DataFrame) -> None:
         text.set_fontsize(6)
     pair_plot._legend.get_title().set_fontsize(8)
 
+    filename = LOG_DIR / "Hogwarts_pairplots.png"
+    plt.savefig(filename)
     plt.show()
 
 
 # **************************** MAIN *******************************
 
 def main(parsed_args):
+    
+    LOG_DIR.mkdir(parents=True, exist_ok=True)
     data = upload_csv(parsed_args.path_csv_to_read)
     if data is None: 
         return

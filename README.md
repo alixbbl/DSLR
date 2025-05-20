@@ -2,7 +2,6 @@
 ## Rappel :
 
 Run these commands to get started : 
-
 `python3 -m venv dslr_env`   
 `source dslr_env/bin/activate`      
 `pip install -r requirements.txt`    
@@ -20,13 +19,14 @@ The main librairies for vizualisation are matplotlib (foundation) and seaborn wh
 
 ## Data Visualisation
  
-We start by calculating the statistics of our preprocessed dataset which can be found in `output/describe/statistics.csv`. Quelques notions de statistiques utiles :    
+We start by calculating the statistics of our preprocessed dataset which can be found in `output/describe/statistics.csv`. 
+Quelques notions de statistiques utiles :    
 
-✅ MEAN : La moyenne, la somme des valeurs divisee par le nombre de ces valeurs.
+✅ MEAN : The average — the sum of all values divided by the number of values.
 
-✅ STD ou Ecart-type : C'est la mesure de dispersion des donnees par rapport a la moyenne de ces donnees. Plus un STD est grand, plus les donnees son eclatees par rapport a leur moyenne.
+✅ STD ou Ecart-type : A measure of how spread out the data is around the mean. A higher standard deviation means the values are more dispersed from the average.
 
-✅ Quartiles : Ils divisent un ensemble de donnees en 4 parties egales : jusqu'a 25%, 50%, 75% et 100%.  Cela permet d'avoir une idee de la distribution des valeurs du dataset.
+✅ Quartiles : They divide a dataset into four equal parts: up to 25%, 50%, 75%, and 100%. This helps to understand the distribution of the dataset's values.
 
 <details>
 <summary><h5 style="display: inline; margin: 0;" >CSV File tip</h5></summary>   
@@ -142,7 +142,7 @@ We can see here that interesting features are Herbology for example which allows
 </details> 
     
     
-## Logistic Regression OnevsAll    
+## Logistic Regression One-vs-All    
 
 <details>
 <summary><h3 style="display: inline; margin: 0">Overview</h2></summary>

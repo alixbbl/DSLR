@@ -3,11 +3,9 @@ import numpy as np
 import argparse
 import seaborn as sns
 import matplotlib.pyplot as plt
-from typing import List
 from pathlib import Path
 from utils.store import store_df_to_csv
 from utils.upload_csv import upload_csv
-from utils.constants import EXPECTED_LABELS_LIST
 
 # Ce code doit permettre à l'utilisateur de visualiser si, par exemple, les élèves de Gryffondor 
 # ont une certaine tendance à avoir de bonnes notes dans les deux matières ou s'il y a des 
@@ -22,14 +20,11 @@ def display_correlation_matrix(numeric_data: pd.DataFrame)-> pd.DataFrame:
         :param data: DataFrame containing the data.
         :return: pd.DataFrame with the correlation matrix.
     """
-    
     corr_matrix = numeric_data.corr(method="pearson")
-
     plt.figure(figsize=(8, 6))
     sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', fmt='.2f', linewidths=0.5, cbar=False)
     plt.title('Correlation Matrix')
     plt.show()
-    
     return corr_matrix
 
 def scatter_plot_correlation_matrix(correlation_df: pd.DataFrame, threshold: float, data: pd.DataFrame) -> None:
@@ -52,8 +47,7 @@ def scatter_plot_correlation_matrix(correlation_df: pd.DataFrame, threshold: flo
                 continue
                 
             # Get absolute correlation value (no negative)
-            corr_value = abs(correlation_df.loc[course1, course2])
-            
+            corr_value = abs(correlation_df.loc[course1, course2]) 
             if corr_value >= threshold:
                 plot_count += 1
                 
@@ -67,15 +61,12 @@ def scatter_plot_correlation_matrix(correlation_df: pd.DataFrame, threshold: flo
                     alpha=0.7,
                     cmap='viridis'
                 )
-                
-
                 actual_corr = correlation_df.loc[course1, course2]
-                
                 # Format titles and labels
                 plt.title(f'Correlation: {course1} vs {course2}\nr = {actual_corr:.2f}', fontsize=14)
                 plt.xlabel(course1, fontsize=12)
                 plt.ylabel(course2, fontsize=12)
-                
+    
                 # legend for houses
                 houses = data['Hogwarts House'].unique()
                 legend_elements = [plt.Line2D([0], [0], marker='o', color='w', 
@@ -83,10 +74,9 @@ def scatter_plot_correlation_matrix(correlation_df: pd.DataFrame, threshold: flo
                                   markersize=10, label=house) 
                                   for i, house in enumerate(houses)]
                 plt.legend(handles=legend_elements, title="Hogwarts House")
-                
+             
                 # for better readability
                 plt.grid(True, alpha=0.3)
-                
                 if actual_corr > 0:
                     correlation_type = "Positive"
                 else:
@@ -98,7 +88,6 @@ def scatter_plot_correlation_matrix(correlation_df: pd.DataFrame, threshold: flo
                     xycoords='axes fraction',
                     bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="gray", alpha=0.8)
                 )
-                
                 plt.tight_layout()
                 plt.show()
                 plt.savefig(f'{LOG_DIR}/{course1}_vs_{course2}.png')
@@ -107,13 +96,13 @@ def scatter_plot_correlation_matrix(correlation_df: pd.DataFrame, threshold: flo
 # **************************** MAIN *******************************
 
 def main(parsed_args):
+    
     LOG_DIR.mkdir(parents=True, exist_ok=True)
     data = upload_csv(parsed_args.path_csv_to_read)
     
     numeric_data = data.select_dtypes(include="number")
     numeric_data = numeric_data.drop(columns=numeric_data.columns[0], axis=1)
     data = data.drop(columns=data.columns[0], axis=1)
-
 
     correlation_matrix = display_correlation_matrix(numeric_data)
     store_df_to_csv(correlation_matrix, "correlation_matrix", LOG_DIR, 2)
