@@ -6,6 +6,7 @@ import plotly.express as px
 from utils.upload_csv import upload_csv
 from utils.maths import MyMaths
 from typing import Tuple
+import matplotlib.pyplot as plt
 
 LOG_DIR = params.LOG_DIR
 DATA_DIR = params.DATA_DIR
@@ -165,17 +166,17 @@ def prepare_data(data: pd.DataFrame):
 
 
 def launch_trainer(X: pd.Series, y: pd.Series):
-        """
-            Train one-vs-all logistic regression models.
-        """
-        models = {}
-        for house in HOGWART_HOUSES:
-            print(f"\nTraining model for {house}...")
-            y_binary = (y == house).astype(int) # va servir a encoder le 0 ou 1 de la classe
-            model = LogisticRegressionTrainer(learning_rate=0.1, max_iterations=1000)
-            model.fit(X, y_binary)
-            models[house] = model 
-        return models
+    """
+        Train one-vs-all logistic regression models.
+    """
+    models = {}
+    for house in HOGWART_HOUSES:
+        print(f"\nTraining model for {house}...")
+        y_binary = (y == house).astype(int) # va servir a encoder le 0 ou 1 de la classe
+        model = LogisticRegressionTrainer(learning_rate=0.1, max_iterations=1000)
+        model.fit(X, y_binary)
+        models[house] = model 
+    return models
 
 def save_model_weights(models: dict, feature_names: list):
     """
@@ -202,7 +203,6 @@ def save_model_weights(models: dict, feature_names: list):
             f.write("Feature weights:\n")
             for i, feature in enumerate(feature_names):
                 f.write(f"{feature}: {W[i]}\n")
-            
             f.write(f"\nLearning rate: {model.learning_rate}\n")
             f.write(f"Iterations: {model.max_iterations}\n")
             f.write(f"Final cost: {model.cost_history[-1] if model.cost_history else 'N/A'}\n")
@@ -210,6 +210,22 @@ def save_model_weights(models: dict, feature_names: list):
     np.save(LOG_DIR / "model_params.npy", all_params)
     print(f"Model weights saved to {LOG_DIR}")
   
+# ******************************* DATA VISUALIZATION ********************************
+
+def plot_costs(models, LOG_DIR):
+
+    for house, model in models.items():
+        plt.plot(model.cost_history, label=house)
+
+    plt.xlabel('Iterations')
+    plt.ylabel('Cost (Loss)')
+    plt.title(f'Cost function over iterations ({params.optimization})')
+    plt.legend()
+    plt.grid(True)
+    filepath = LOG_DIR / f'Model_cost_figures({params.optimization}).png'
+    plt.savefig(filepath)
+    plt.show()
+
 
 # *************************************** MAIN **************************************
 
@@ -235,6 +251,7 @@ def main():
         
         print("\nSaving model parameters")
         save_model_weights(models, TRAINING_FEATURES)
+        plot_costs(models, LOG_DIR)
     
     except Exception as e:
         print(f'Something happened again: {e}')

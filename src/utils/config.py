@@ -33,9 +33,9 @@ class Config():
     test_size = 0.2
 
     # model
-    optimization = "gradient_descent"
+    # optimization = "gradient_descent"
     # optimization = "stochastic_gradient_descent"
-    # optimization = "mini_batch_gradient_descent"
+    optimization = "mini_batch_gradient_descent"
 
 
 params = Config()
