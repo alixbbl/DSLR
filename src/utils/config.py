@@ -1,6 +1,5 @@
 from pathlib import Path
 
-
 class Config():
 
     # paths
@@ -10,6 +9,7 @@ class Config():
     validation_data_path = "my_validation_dataset.csv"
     test_data_path = "data/dataset_test.csv"
     weights_file = LOG_DIR / "model_params.npy"
+    standardization_params = "standardization_params.csv"
 
     # data
     hogwart_houses = ["Gryffindor", "Hufflepuff", "Ravenclaw", "Slytherin"]

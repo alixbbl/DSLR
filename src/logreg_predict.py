@@ -5,8 +5,7 @@ from pathlib import Path
 from utils.config import params
 from utils.upload_csv import upload_csv
 from utils.metrics import calculate_accuracy
-from utils.maths import MyMaths
-from logreg_validation import calculate_accuracy
+from utils.store import save_predictions
 
 LOG_DIR = params.LOG_DIR
 DATA_DIR = params.DATA_DIR
@@ -21,7 +20,9 @@ class LogisticRegressionPredictor:
         self.load_weights()
     
     def load_weights(self):
-        """Load the trained weights from file"""
+        """
+            Load the trained weights from file
+        """
         try:
             all_params = np.load(self.weights_file, allow_pickle=True).item()
             
@@ -39,30 +40,20 @@ class LogisticRegressionPredictor:
             raise Exception(f"Error loading model weights: {e}")
     
     def sigmoid(self, z):
-        """Sigmoid activation function"""
+        """
+            Sigmoid activation function
+        """
         return 1 / (1 + np.exp(-z))
-    
-    def standardize(self, df: pd.DataFrame):
-        """
-        Standardize features to mean=0 and std=1.
-        
-        :param df: DataFrame
-        :return: standardized DataFrame
-        """
-        maths = MyMaths()
-        std = df.apply(maths.my_std) 
-        mean = df.apply(maths.my_mean) 
-        return (df - mean) / std
     
     def predict_proba(self, X):
         """
-        Predict probabilities for each house
-        
-        :param X: Features DataFrame
-        :return: dictionary of probabilities for each house
+            Predict probabilities for each house
+            
+            :param X: Features DataFrame
+            :return: dictionary of probabilities for each house
         """
         if params.standardize:
-            X = self.standardize(X)
+            X = standardize_with_saved_params(X, LOG_DIR / params.standardization_params)
     
         probabilities = {}
         for house, model in self.models.items():
@@ -74,10 +65,10 @@ class LogisticRegressionPredictor:
     
     def predict(self, X):
         """
-        Predict the house with highest probability for each student
-        
-        :param X: Features DataFrame
-        :return: list of predicted houses
+            Predict the house with highest probability for each student
+            
+            :param X: Features DataFrame
+            :return: list of predicted houses
         """
         probabilities = self.predict_proba(X)
         predictions = [""] * len(X)
@@ -94,7 +85,9 @@ class LogisticRegressionPredictor:
         return predictions
 
 def ft_imputation_by_mean(df: pd.DataFrame) -> pd.DataFrame:
-
+    """
+        Replaces all the NaN by the mean of each Series.
+    """
     prediction_dataset = pd.DataFrame()
     for feature in df.columns:
         prediction_dataset[feature] = df[feature]
@@ -102,21 +95,13 @@ def ft_imputation_by_mean(df: pd.DataFrame) -> pd.DataFrame:
     return prediction_dataset
 
 def standardize_with_saved_params(df: pd.DataFrame, stats_path: Path):
+    """
+        Using the standardization parameters of the training phase.
+    """
     stats = pd.read_csv(stats_path, index_col=0)
     mean = stats['mean']
     std = stats['std']
     return (df - mean) / std
-
-def save_predictions(predictions, output_file):
-    """
-    Save predictions to a CSV file
-    
-    :param predictions: list of predicted houses
-    :param output_file: path to output CSV file
-    """
-    output = pd.DataFrame({'Hogwarts House': predictions})
-    output.to_csv(output_file, index_label='Index')
-    print(f"Predictions saved to {output_file}")
 
 
 # ****************************************** MAIN ***************************************************
@@ -137,10 +122,6 @@ def main(parsed_args):
             X = ft_imputation_by_mean(X)
         except Exception as e:
             raise Exception(f"Preparing data error: {e}")
-
-        if params.standardize:
-            X = standardize_with_saved_params(X, LOG_DIR / "standardization_params.csv")
-        print(f"Loading model weights from {params.weights_file}...")
         
         try:
             predictor = LogisticRegressionPredictor()

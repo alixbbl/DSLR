@@ -5,7 +5,8 @@ from utils.config import params
 from utils.upload_csv import upload_csv
 from utils.maths import MyMaths
 from utils.metrics import calculate_accuracy
-from logreg_predict import LogisticRegressionPredictor, save_predictions
+from utils.store import save_predictions
+from logreg_predict import LogisticRegressionPredictor
 
 LOG_DIR = params.LOG_DIR
 DATA_DIR = params.DATA_DIR
@@ -30,6 +31,7 @@ def main():
         print("Preparing test data...")
         X_val = validation_dataset[TRAINING_FEATURES].copy() # X_val ici est deja standardized et les NaN sont absents
         y_val = validation_dataset['Hogwarts House']
+        params.standardize = False
         print(f"Loading model weights from {params.weights_file}...")
         predictor = LogisticRegressionPredictor()
         print("Making predictions...")
