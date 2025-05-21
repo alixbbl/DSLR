@@ -21,24 +21,28 @@ def main():
     LOG_DIR.mkdir(parents=True, exist_ok=True)
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     
-    validation_data_path = DATA_DIR / params.validation_data_path
-    if not validation_data_path.exists():
-        print(f"Error : This file doesn't exist here -> {validation_data_path.resolve()}")
+    validation_data_path_features = DATA_DIR / params.validation_data_path_features
+    validation_data_path_target = DATA_DIR / params.validation_data_path_target
+    
+    if not validation_data_path_features.exists():
+        print(f"Error : This file doesn't exist here -> {validation_data_path_features.resolve()}")
+        return
+    elif not validation_data_path_target.exists():
+        print(f"Error : This file doesn't exist here -> {validation_data_path_target.resolve()}")
         return
     
-    validation_dataset = upload_csv(str(validation_data_path))
+    validation_dataset_features = upload_csv(str(validation_data_path_features))
     try:        
         print("Preparing test data...")
-        X_val = validation_dataset[TRAINING_FEATURES].copy() # X_val ici est deja standardized et les NaN sont absents
-        y_val = validation_dataset['Hogwarts House']
         params.standardize = False
         print(f"Loading model weights from {params.weights_file}...")
         predictor = LogisticRegressionPredictor()
         print("Making predictions...")
-        predictions = predictor.predict(X_val)
+        predictions = predictor.predict(validation_dataset_features)
         save_predictions(predictions, LOG_DIR / "validation_predictions.csv") 
 
-        # on verifie ensuite l'accuracy 
+        # on verifie ensuite l'accuracy
+        y_val = upload_csv(str(validation_data_path_target))
         accuracy = calculate_accuracy(predictions, y_val.values)
         print(f"Accuracy: {accuracy:.4f} ({accuracy * 100:.2f}%)")
         

@@ -27,115 +27,108 @@ class LogisticRegressionTrainer():
         print(f"Optimization method: {self.optimization}")
     
     def initialize_parameter(self):
-        """Initializes the parameters of the model."""
+        """
+            Initializes the parameters of the model.
+        """
         self.W = np.zeros(self.X.shape[1])
         self.b = 0.0
         
     def sigmoid(self, z: np.ndarray):
-        """Sigmoid activation function"""
+        """
+            Sigmoid activation function.
+        """
         return 1 / (1 + np.exp(-z))
         
     def forward(self, X: np.ndarray):
-        """Computes forward propagation for given input X."""
+        """
+            Computes forward propagation for given input X.
+        """
         Z = np.matmul(X, self.W) + self.b
         A = self.sigmoid(Z)
         return A
     
     def compute_cost(self, predictions: np.ndarray):
-        """Compute binary cross-entropy loss"""
+        """
+            Compute binary cross-entropy loss.
+        """
         m = self.X.shape[0]  
         cost = np.sum((-np.log(predictions + 1e-8) * self.y) + (-np.log(1 - predictions + 1e-8)) * (1 - self.y))
         cost = cost / m
         return cost
     
     def compute_gradient(self, predictions: np.ndarray):
-        """Computes the gradients for the model using given predictions."""
+        """
+            Computes the gradients for the model using given predictions.
+        """
         m = self.X.shape[0]
         # compute gradients
         self.dW = np.matmul(self.X.T, (predictions - self.y))
         self.db = np.sum(np.subtract(predictions, self.y))
-
         # scale gradients
         self.dW = self.dW * 1 / m
         self.db = self.db * 1 / m    
 
     def fit(self, X, y):
-        """Mimics the fit function used as a builtin in ML libraries, this function will train the model using various 
-            methods : gradient descent, stochastic gradient descent or mini-batch graident descent, as requested by user.
-            :arguments : X => training features, y : target
-            :returns : None
+        """
+            Train the model using the selected optimization method.
         """
         self.X = X
         self.y = y
         self.m = X.shape[0]
-
         self.initialize_parameter()
+
         for i in range(self.max_iterations):
-            predictions = self.forward(self.X)
-
-            cost = self.compute_cost(predictions)
-            self.cost_history.append(cost)
-            
             if self.optimization == "gradient_descent":
-                self.compute_gradient(predictions)                
-                cost = self.compute_cost(predictions)
-                self.cost_history.append(cost)
+                predictions = self.forward(self.X)
+                self.compute_gradient(predictions)
+                self.W -= self.learning_rate * self.dW
+                self.b -= self.learning_rate * self.db
 
-            # BONUS : stochastic GD
             elif self.optimization == "stochastic_gradient_descent":
                 random_index = np.random.randint(0, self.m)
                 X_sample = self.X[random_index:random_index+1]
                 y_sample = self.y[random_index:random_index+1]
-
                 z_sample = np.dot(X_sample, self.W) + self.b
                 prediction_sample = self.sigmoid(z_sample)
-
                 self.dW = X_sample.T.dot(prediction_sample - y_sample)
                 self.db = np.sum(prediction_sample - y_sample)
+                self.W -= self.learning_rate * self.dW
+                self.b -= self.learning_rate * self.db
 
-            # BONUS : mini-batch GD
             elif self.optimization == "mini_batch_gradient_descent":
                 batch_size = params.batch_size
                 num_batches = int(np.ceil(self.m / batch_size))
-                
-                if isinstance(self.X, pd.DataFrame):
-                    shuffled_indices = np.random.permutation(self.m)
-                    
-                    for j in range(num_batches):
-                        start_idx = j * batch_size
-                        end_idx = min((j + 1) * batch_size, self.m)
-                        
-                        batch_indices = shuffled_indices[start_idx:end_idx]
-                        
-                        X_batch = self.X.iloc[batch_indices].values
-                        y_batch = self.y.iloc[batch_indices].values
-                        
-                        X_orig, y_orig = self.X, self.y
-                        
-                        self.X, self.y = X_batch, y_batch
-                        predictions_batch = self.forward(X_batch)
-                        self.compute_gradient(predictions_batch)
-                        
-                        self.W = self.W - self.learning_rate * self.dW
-                        self.b = self.b - self.learning_rate * self.db
-                        
-                        self.X, self.y = X_orig, y_orig
+                shuffled_indices = np.random.permutation(self.m)
+
+                for j in range(num_batches):
+                    start_idx = j * batch_size
+                    end_idx = min((j + 1) * batch_size, self.m)
+                    batch_indices = shuffled_indices[start_idx:end_idx]
+                    X_batch = self.X.iloc[batch_indices].values
+                    y_batch = self.y.iloc[batch_indices].values
+                    z_batch = np.dot(X_batch, self.W) + self.b
+                    prediction_batch = self.sigmoid(z_batch)
+                    dW = X_batch.T.dot(prediction_batch - y_batch)
+                    db = np.sum(prediction_batch - y_batch)
+                    self.W -= self.learning_rate * dW
+                    self.b -= self.learning_rate * db
+
             else:
                 raise ValueError("Invalid optimization method. Choose 'gradient_descent', 'stochastic_gradient_descent', or 'mini_batch_gradient_descent'.")
-            
-            self.W = self.W - self.learning_rate * self.dW
-            self.b = self.b - self.learning_rate * self.db
 
-            if i % 200 == 0:
-                print("Cost after iteration {}: {}".format(i, cost))
+            if i % 200 == 0 or i == self.max_iterations - 1:
+                all_preds = self.forward(self.X)
+                cost = self.compute_cost(all_preds)
+                self.cost_history.append(cost)
+                print(f"Cost after iteration {i}: {cost}")
 
 # ************************************* DATA PREPROCESSING **************************************
 
 def ft_standardize(df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Series, pd.Series]:
     """
-    Standardize features to mean=0 and std=1.
-    :param df: DataFrame
-    :return: standardized DataFrame
+        Standardize features to mean=0 and std=1.
+        :param df: DataFrame
+        :return: standardized DataFrame
     """
     maths = MyMaths()
     std = df.apply(maths.my_std) 
@@ -172,7 +165,9 @@ def prepare_data(data: pd.DataFrame):
 
 
 def launch_trainer(X: pd.Series, y: pd.Series):
-        """Train one-vs-all logistic regression models"""
+        """
+            Train one-vs-all logistic regression models.
+        """
         models = {}
         for house in HOGWART_HOUSES:
             print(f"\nTraining model for {house}...")
@@ -231,8 +226,9 @@ def main():
 
         # test df creation et save
         validation_df = X_val.copy()
+        validation_df.to_csv(DATA_DIR / "my_validation_dataset_features.csv", index=False) # represente le X_val
         validation_df['Hogwarts House'] = y_val.values
-        validation_df.to_csv(DATA_DIR / "my_validation_dataset.csv", index=False)
+        validation_df['Hogwarts House'].to_csv(DATA_DIR / "my_validation_dataset_target.csv", index=False) # ici le y_val
 
         print("Training models\n")
         models = launch_trainer(X_train, y_train)

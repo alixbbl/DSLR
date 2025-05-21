@@ -48,7 +48,7 @@ def main(parsed_args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('path_csv_to_read',
-                        nargs='?',
+                        default='data/dataset_train.csv',
                         type=str,
                         help="CSV file path to read")
     parsed_args = parser.parse_args()

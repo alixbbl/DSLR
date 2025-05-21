@@ -106,14 +106,13 @@ def main(parsed_args):
 
     correlation_matrix = display_correlation_matrix(numeric_data)
     store_df_to_csv(correlation_matrix, "correlation_matrix", LOG_DIR, 2)
-
-    print(data.head())
     scatter_plot_correlation_matrix(correlation_matrix, 0.70, data)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('path_csv_to_read',
+    parser.add_argument('--path_csv_to_read',
                         type = str,
+                        default='data/dataset_train.csv',
                         help = """CSV file to read""")
     parsed_args = parser.parse_args()
     main(parsed_args)
