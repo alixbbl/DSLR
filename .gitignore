@@ -2,3 +2,5 @@
 dslr_env
 env
 __pycache__
+/data/my_validation_dataset.csv
+/data/dataset_truth.csv

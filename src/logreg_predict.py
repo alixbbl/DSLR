@@ -1,11 +1,15 @@
 import pandas as pd
 import numpy as np
+import argparse
 from pathlib import Path
 from utils.config import params
 from utils.upload_csv import upload_csv
+from utils.metrics import calculate_accuracy
 from utils.maths import MyMaths
+from logreg_validation import calculate_accuracy
 
 LOG_DIR = params.LOG_DIR
+DATA_DIR = params.DATA_DIR
 HOGWART_HOUSES = params.hogwart_houses
 TRAINING_FEATURES = params.training_features
 
@@ -87,24 +91,16 @@ class LogisticRegressionPredictor:
                     best_prob = probs[i]
                     best_house = house
             predictions[i] = best_house
-        
         return predictions
 
-    # def calculate_accuracy(self, X, y_true):
-    #     """
-    #     Calculate the accuracy of the model on test data
-        
-    #     :param X: Features DataFrame
-    #     :param y_true: True labels (Hogwarts Houses)
-    #     :return: accuracy score (0-1)
-    #     """
-    #     y_pred = self.predict(X)
-    #     correct = sum(1 for pred, true in zip(y_pred, y_true) if pred == true)
-    #     total = len(y_true)
-    #     accuracy = correct / total if total > 0 else 0
-    #     return accuracy
+def ft_imputation_by_mean(df: pd.DataFrame) -> pd.DataFrame:
 
-# ajout ?
+    prediction_dataset = pd.DataFrame()
+    for feature in df.columns:
+        prediction_dataset[feature] = df[feature]
+    prediction_dataset.fillna(prediction_dataset.mean(), inplace=True) # imputation par la moyenne
+    return prediction_dataset
+
 def standardize_with_saved_params(df: pd.DataFrame, stats_path: Path):
     stats = pd.read_csv(stats_path, index_col=0)
     mean = stats['mean']
@@ -122,65 +118,61 @@ def save_predictions(predictions, output_file):
     output.to_csv(output_file, index_label='Index')
     print(f"Predictions saved to {output_file}")
 
+
 # ****************************************** MAIN ***************************************************
 
-# def main():
-    
-#     LOG_DIR.mkdir(parents=True, exist_ok=True) 
 
-#     print(f"Loading test data from {params.training_data_path}...") # c'est pas plutot le test_data_path = "data/dataset_test.csv" ??
-#     data = upload_csv(params.training_data_path)
+def main(parsed_args):
     
-#     try:        
-#         print("Preparing test data...")
-#         X = data[TRAINING_FEATURES].copy()
-#         X = X.dropna(subset=TRAINING_FEATURES)
-        
-#         print(f"Loading model weights from {params.weights_file}...")
-#         predictor = LogisticRegressionPredictor()
-        
-#         print("Making predictions...")
-#         predictions = predictor.predict(X)
-        
-#         if 'Hogwarts House' in data.columns and data['Hogwarts House'].notna().any():
-#             true_houses = data.loc[X.index, 'Hogwarts House']
-#             accuracy = predictor.calculate_accuracy(X, true_houses)
-#             print(f"Model accuracy: {accuracy:.4f} ({accuracy*100:.2f}%)")
+    LOG_DIR.mkdir(parents=True, exist_ok=True)
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-#         save_predictions(predictions, LOG_DIR / "houses.csv")
-        
-#     except Exception as e:
-#         print(f"Error during prediction: {e}")
-
-def main():
-    
-    LOG_DIR.mkdir(parents=True, exist_ok=True) 
-    print(f"Loading test data from {params.test_data_path}...") # modif ici
-    data = upload_csv(params.test_data_path) # et ici
+    print(f"Loading test data from {params.test_data_path}...")
+    data_test = upload_csv(params.test_data_path)
     
     try:        
         print("Preparing test data...")
-        X = data[TRAINING_FEATURES].copy()
-        X = X.dropna(subset=TRAINING_FEATURES)
-        # print(X.shape)
-        
-        print(f"Loading model weights from {params.weights_file}...")
+        X = data_test[TRAINING_FEATURES].copy()
+        try:
+            X = ft_imputation_by_mean(X)
+        except Exception as e:
+            raise Exception(f"Preparing data error: {e}")
+
         if params.standardize:
             X = standardize_with_saved_params(X, LOG_DIR / "standardization_params.csv")
-        predictor = LogisticRegressionPredictor()
-        print("Making predictions...")
-        predictions = predictor.predict(X)
-
-        # On a pas de colonne Hogwarts House pleine dans le dataset de test donc inutile ici => faire un petit programme predict comme la correction ?
-        # if 'Hogwarts House' in data.columns and data['Hogwarts House'].notna().any():
-        #     true_houses = data.loc[X.index, 'Hogwarts House']
-        #     accuracy = predictor.calculate_accuracy(X, true_houses)
-        #     print(f"Model accuracy: {accuracy:.4f} ({accuracy*100:.2f}%)")
-
-        save_predictions(predictions, LOG_DIR / "houses.csv") 
+        print(f"Loading model weights from {params.weights_file}...")
+        
+        try:
+            predictor = LogisticRegressionPredictor()
+            print("Making predictions...")
+            predictions = predictor.predict(X)
+            save_predictions(predictions, LOG_DIR / "houses.csv")
+        except Exception as e:
+            raise Exception(f"Prediction logic error: {e}")
+        
+        # calcul de perfomance si le fichier de verites terrain est fourni : 
+        if parsed_args.path_truth_csv:
+            data_truth = upload_csv(parsed_args.path_truth_csv)
+            if 'Index' in data_truth.columns:
+                data_truth.drop(columns='Index', inplace=True)
+            y_truth = data_truth['Hogwarts House']
+            y_pred = predictions
+            try :
+                accuracy = calculate_accuracy(y_pred, y_truth)
+                print(f"Accuracy: {accuracy:.4f} ({accuracy * 100:.2f}%)")
+            except:
+                raise Exception(f'Calculating accuracy failure : {e}')
+    
     except Exception as e:
         print(f"Error during prediction: {e}")
 
 
 if __name__ == "__main__":
-    main()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--path_truth_csv',
+                        type = str,
+                        default = None,
+                        help = """Optionnal - Truth CSV file to read and calculate accuracy of the modele.""")
+    parsed_args = parser.parse_args()
+    main(parsed_args)

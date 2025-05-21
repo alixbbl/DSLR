@@ -5,8 +5,10 @@ from sklearn.model_selection import train_test_split
 import plotly.express as px
 from utils.upload_csv import upload_csv
 from utils.maths import MyMaths
+from typing import Tuple
 
 LOG_DIR = params.LOG_DIR
+DATA_DIR = params.DATA_DIR
 HOGWART_HOUSES = params.hogwart_houses
 TRAINING_FEATURES = params.training_features
 
@@ -27,9 +29,7 @@ class LogisticRegressionTrainer():
     def initialize_parameter(self):
         """Initializes the parameters of the model."""
         self.W = np.zeros(self.X.shape[1])
-        # print(self.W)
         self.b = 0.0
-        # print(self.b)
         
     def sigmoid(self, z: np.ndarray):
         """Sigmoid activation function"""
@@ -129,9 +129,9 @@ class LogisticRegressionTrainer():
             if i % 200 == 0:
                 print("Cost after iteration {}: {}".format(i, cost))
 
-# ************************************* DATE PREPROCESSING **************************************
+# ************************************* DATA PREPROCESSING **************************************
 
-def ft_standardize(df: pd.DataFrame) -> pd.DataFrame:
+def ft_standardize(df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Series, pd.Series]:
     """
     Standardize features to mean=0 and std=1.
     :param df: DataFrame
@@ -142,16 +142,30 @@ def ft_standardize(df: pd.DataFrame) -> pd.DataFrame:
     mean = df.apply(maths.my_mean)
     stats = pd.DataFrame({'mean': mean, 'std': std})
     stats.to_csv(LOG_DIR / "standardization_params.csv")
+    return (df - mean) / std, mean, std
+
+def apply_standardization(df: pd.DataFrame, mean: pd.Series, std: pd.Series)-> pd.DataFrame:
+    """
+        Takes mean and std of the X_train dataset and applies to another dataset(X_val, ...).
+    """
     return (df - mean) / std
 
 def prepare_data(data: pd.DataFrame):
-    """Clean and prepare data for training"""
-    data = data.dropna(subset=TRAINING_FEATURES)
+    """
+        Clean and prepare data for training, splitting must be applied before standardization to avoid any data leakage.
+        arguments: Dataset.
+        returns: 2 datasets for training and 2 for model validation.
+    """
+    data = data.dropna(subset=TRAINING_FEATURES) # ok de drop les nan ici pour le training et validation
     X = data[TRAINING_FEATURES].copy()
     y = data['Hogwarts House'].copy()
+    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=params.test_size, random_state=params.seed)
+    
     if params.standardize:
-        X = ft_standardize(X)
-    return (train_test_split(X, y, test_size=params.test_size, random_state=params.seed))
+        X_train, mean, std = ft_standardize(X_train)
+        X_val = apply_standardization(X_val, mean, std)
+
+    return (X_train, X_val, y_train, y_val)
         
     
 # ************************************* START / END  **************************************
@@ -169,32 +183,38 @@ def launch_trainer(X: pd.Series, y: pd.Series):
         return models
 
 def save_model_weights(models: dict, feature_names: list):
+    """
+        Save model weights and parameters to files
+    """    
     print(feature_names)
-    """Save model weights and parameters to files"""    
     all_params = {}
     
     for house, model in models.items():
+        W = model.W.values if isinstance(model.W, pd.Series) else model.W
         model_params = {
-            'W': model.W.tolist(),
+            'W': W.tolist(),
             'b': model.b,
             'learning_rate': model.learning_rate,
             'iterations': model.max_iterations,
             'features': feature_names
         }
         all_params[house] = model_params  
+        
         with open(LOG_DIR / f"{house}_weights.txt", 'w') as f:
+
             f.write(f"Model weights for {house}:\n\n")
             f.write(f"Bias: {model.b}\n\n")
             f.write("Feature weights:\n")
             for i, feature in enumerate(feature_names):
-                f.write(f"{feature}: {model.W[i]}\n")
+                f.write(f"{feature}: {W[i]}\n")
             
             f.write(f"\nLearning rate: {model.learning_rate}\n")
             f.write(f"Iterations: {model.max_iterations}\n")
             f.write(f"Final cost: {model.cost_history[-1] if model.cost_history else 'N/A'}\n")
+    
     np.save(LOG_DIR / "model_params.npy", all_params)
-    print(f"Model weights saved to {LOG_DIR}")    
-
+    print(f"Model weights saved to {LOG_DIR}")
+  
 
 # *************************************** MAIN **************************************
 
@@ -202,12 +222,17 @@ def save_model_weights(models: dict, feature_names: list):
 def main():
         
     LOG_DIR.mkdir(parents=True, exist_ok=True)
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
     data = upload_csv(params.training_data_path)
     
     try:
-        print("Preparing data\n")
-        X_train, X_test, y_train, y_test = prepare_data(data)
-        print(y_test.head())
+        print("Preparing data for training :\n")
+        X_train, X_val, y_train, y_val = prepare_data(data)
+
+        # test df creation et save
+        validation_df = X_val.copy()
+        validation_df['Hogwarts House'] = y_val.values
+        validation_df.to_csv(DATA_DIR / "my_validation_dataset.csv", index=False)
 
         print("Training models\n")
         models = launch_trainer(X_train, y_train)

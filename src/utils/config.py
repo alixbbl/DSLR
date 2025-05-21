@@ -5,22 +5,24 @@ class Config():
 
     # paths
     LOG_DIR = Path("output/logreg")
+    DATA_DIR = Path("data")
     training_data_path = "data/dataset_train.csv"
+    validation_data_path = "my_validation_dataset.csv"
     test_data_path = "data/dataset_test.csv"
     weights_file = LOG_DIR / "model_params.npy"
 
     # data
     hogwart_houses = ["Gryffindor", "Hufflepuff", "Ravenclaw", "Slytherin"]
-    # training_features = ["Defense Against the Dark Arts", "Herbology", "Ancient Runes", "Astronomy", "Transfiguration"]
-    training_features = [
-                            'Astronomy', 
-                            'Herbology', 
-                            'Divination', 
-                            'Muggle Studies', 
-                            'Ancient Runes', 
-                            'History of Magic',
-                            'Charms', 
-                            ]
+    training_features = ["Defense Against the Dark Arts", "Herbology", "Ancient Runes", "Astronomy", "Transfiguration"]
+    # training_features = [
+    #                         'Astronomy', 
+    #                         'Herbology', 
+    #                         'Divination', 
+    #                         'Muggle Studies', 
+    #                         'Ancient Runes', 
+    #                         'History of Magic',
+    #                         'Charms', 
+    #                         ]
     standardize = True
 
     #hyperparameters
