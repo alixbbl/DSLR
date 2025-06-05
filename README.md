@@ -1,5 +1,5 @@
 
-## Usage :
+## Usage 
 
 Run these commands to get started :    
 - `python3 -m venv dslr_env`     
@@ -7,9 +7,9 @@ Run these commands to get started :
 - `pip install -r requirements.txt`      
 
 
-## Our dataset 
+## Provided dataset 
 
-A Hogwarts student dataset with the following columns, that we've splitted into two categories:
+A Hogwarts student dataset with the following columns, splitted into two categories:
 
 * Student information: Index, Hogwarts House, First Name, Last Name, Birthday, Best Hand
 
