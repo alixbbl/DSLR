@@ -28,7 +28,7 @@ Some useful statistical concepts:
 - Q1 (First quartile): The 25th percentile, meaning that 25% of the data falls below the first quartile Quartiles & Quantiles | Calculation, Definition & Interpretation
 - Q2 (Second quartile/Median): The 50th percentile, meaning that 50% of the data falls below the second quartile Quartiles & Quantiles | Calculation, Definition & Interpretation
 - Q3 (Third quartile): The 75th percentile, meaning that 75% of the data falls below the third quartile Quartiles & Quantiles | Calculation, Definition & Interpretation
-✅ MAX: The largest value in the dataset.
+✅ MIN/MAX: The smallest/largest value in the dataset.
 ✅ COUNT NaN: The number of missing or null values in each column.
 ✅ PERCENT NaN: The percentage of missing values relative to the total dataset size.
 ✅ VARIANCE: The average of the squared differences from the mean. It measures variability in the data (standard deviation squared).
