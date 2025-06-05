@@ -88,7 +88,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate descriptive statistics for a dataset")
     parser.add_argument('--path_csv_to_read',
                         type = str,
-                        default='data/dataset_train.csv',
+                        default='../data/dataset_train.csv',
                         help="Path to the CSV file to analyze")
     parsed_args = parser.parse_args()
     main(parsed_args)
