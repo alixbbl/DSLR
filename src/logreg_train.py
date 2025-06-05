@@ -3,10 +3,12 @@ import numpy as np
 from utils.config import params
 from sklearn.model_selection import train_test_split
 # import plotly.express as px
+import tensorflow as tf
 from utils.upload_csv import upload_csv
 from utils.maths import MyMaths
 from typing import Tuple
 import matplotlib.pyplot as plt
+from utils.tensorboard import TensorBoardCallback
 
 LOG_DIR = params.LOG_DIR
 DATA_DIR = params.DATA_DIR
@@ -16,11 +18,11 @@ TRAINING_FEATURES = params.training_features
 class LogisticRegressionTrainer():
     
     def __init__(self, learning_rate = params.learning_rate, 
-                 max_iterations = params.max_iterations,
+                 epochs = params.epochs,
                  X_train = None, 
                  y_train = None):
         self.learning_rate = learning_rate
-        self.max_iterations = max_iterations
+        self.epochs = epochs
         self.optimization = params.optimization
         self.X = X_train
         self.y = y_train
@@ -69,7 +71,7 @@ class LogisticRegressionTrainer():
         self.dW = self.dW * 1 / m
         self.db = self.db * 1 / m    
 
-    def fit(self, X, y):
+    def fit(self, X, y, callback, house_name):
         """
             Train the model using the selected optimization method.
         """
@@ -78,7 +80,7 @@ class LogisticRegressionTrainer():
         self.m = X.shape[0]
         self.initialize_parameter()
 
-        for i in range(self.max_iterations):
+        for i in range(self.epochs):
             if self.optimization == "gradient_descent":
                 predictions = self.forward(self.X)
                 self.compute_gradient(predictions)
@@ -116,11 +118,14 @@ class LogisticRegressionTrainer():
 
             else:
                 raise ValueError("Invalid optimization method. Choose 'gradient_descent', 'stochastic_gradient_descent', or 'mini_batch_gradient_descent'.")
-
-            if i % 200 == 0 or i == self.max_iterations - 1:
-                all_preds = self.forward(self.X)
-                cost = self.compute_cost(all_preds)
-                self.cost_history.append(cost)
+            
+            all_preds = self.forward(self.X)
+            cost = self.compute_cost(all_preds)
+            self.cost_history.append(cost)
+            if callback:
+                callback.log_iteration(i, cost, house_name)
+                
+            if i % 200 == 0 or i == self.epochs - 1:
                 print(f"Cost after iteration {i}: {cost}")
 
 # ************************************* DATA PREPROCESSING **************************************
@@ -165,19 +170,6 @@ def prepare_data(data: pd.DataFrame):
 # ************************************* START / END  **************************************
 
 
-def launch_trainer(X: pd.Series, y: pd.Series):
-    """
-        Train one-vs-all logistic regression models.
-    """
-    models = {}
-    for house in HOGWART_HOUSES:
-        print(f"\nTraining model for {house}...")
-        y_binary = (y == house).astype(int) # va servir a encoder le 0 ou 1 de la classe
-        model = LogisticRegressionTrainer(learning_rate=0.1, max_iterations=1000)
-        model.fit(X, y_binary)
-        models[house] = model 
-    return models
-
 def save_model_weights(models: dict, feature_names: list):
     """
         Save model weights and parameters to files
@@ -191,7 +183,7 @@ def save_model_weights(models: dict, feature_names: list):
             'W': W.tolist(),
             'b': model.b,
             'learning_rate': model.learning_rate,
-            'iterations': model.max_iterations,
+            'epochs': model.epochs,
             'features': feature_names
         }
         all_params[house] = model_params  
@@ -204,7 +196,7 @@ def save_model_weights(models: dict, feature_names: list):
             for i, feature in enumerate(feature_names):
                 f.write(f"{feature}: {W[i]}\n")
             f.write(f"\nLearning rate: {model.learning_rate}\n")
-            f.write(f"Iterations: {model.max_iterations}\n")
+            f.write(f"Epochs: {model.epochs}\n")
             f.write(f"Final cost: {model.cost_history[-1] if model.cost_history else 'N/A'}\n")
     
     np.save(LOG_DIR / "model_params.npy", all_params)
@@ -217,9 +209,9 @@ def plot_costs(models, LOG_DIR):
     for house, model in models.items():
         plt.plot(model.cost_history, label=house)
 
-    plt.xlabel('Iterations')
+    plt.xlabel('Epochs')
     plt.ylabel('Cost (Loss)')
-    plt.title(f'Cost function over iterations ({params.optimization})')
+    plt.title(f'Cost function over epochs ({params.optimization})')
     plt.legend()
     plt.grid(True)
     filepath = LOG_DIR / f'Model_cost_figures({params.optimization}).png'
@@ -234,7 +226,8 @@ def main():
         
     LOG_DIR.mkdir(parents=True, exist_ok=True)
     DATA_DIR.mkdir(parents=True, exist_ok=True)
-    data = upload_csv(params.training_data_path)
+    callback = TensorBoardCallback(LOG_DIR)
+    data = upload_csv(params.training_data_path_features)
     
     try:
         print("Preparing data for training :\n")
@@ -247,8 +240,14 @@ def main():
         validation_df['Hogwarts House'].to_csv(DATA_DIR / "my_validation_dataset_target.csv", index=False) # ici le y_val
 
         print("Training models\n")
-        models = launch_trainer(X_train, y_train)
-        
+        models = {}
+        for house in HOGWART_HOUSES:
+            print(f"\nTraining model for {house}...")
+            y_binary = (y_train == house).astype(int) # va servir a encoder le 0 ou 1 de la classe
+            model = LogisticRegressionTrainer(learning_rate=0.1, epochs=params.epochs)
+            model.fit(X_train, y_binary, callback, house)
+            models[house] = model 
+
         print("\nSaving model parameters")
         save_model_weights(models, TRAINING_FEATURES)
         plot_costs(models, LOG_DIR)
