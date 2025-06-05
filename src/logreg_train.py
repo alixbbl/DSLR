@@ -6,26 +6,22 @@ from sklearn.model_selection import train_test_split
 import tensorflow as tf
 from utils.upload_csv import upload_csv
 from utils.maths import MyMaths
+from utils.store import store_df_to_csv
 from typing import Tuple
 import matplotlib.pyplot as plt
 from utils.tensorboard import TensorBoardCallback
 
 LOG_DIR = params.LOG_DIR
 DATA_DIR = params.DATA_DIR
-HOGWART_HOUSES = params.hogwart_houses
-TRAINING_FEATURES = params.training_features
 
 class LogisticRegressionTrainer():
     
-    def __init__(self, learning_rate = params.learning_rate, 
-                 epochs = params.epochs,
-                 X_train = None, 
-                 y_train = None):
+    def __init__(self, learning_rate: float = 0.1, 
+                 epochs: int = 100,
+                 optimization:str = "gradient_descent"):
         self.learning_rate = learning_rate
         self.epochs = epochs
-        self.optimization = params.optimization
-        self.X = X_train
-        self.y = y_train
+        self.optimization = optimization
         self.cost_history = []
         print(f"Optimization method: {self.optimization}")
     
@@ -155,8 +151,8 @@ def prepare_data(data: pd.DataFrame):
         arguments: Dataset.
         returns: 2 datasets for training and 2 for model validation.
     """
-    data = data.dropna(subset=TRAINING_FEATURES) # ok de drop les nan ici pour le training et validation
-    X = data[TRAINING_FEATURES].copy()
+    data = data.dropna(subset=params.training_features)
+    X = data[params.training_features].copy()
     y = data['Hogwarts House'].copy()
     X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=params.test_size, random_state=params.seed)
     
@@ -230,30 +226,28 @@ def main():
     data = upload_csv(params.training_data_path_features)
     
     try:
-        print("Preparing data for training :\n")
+        print("Preparing data for training...\n")
         X_train, X_val, y_train, y_val = prepare_data(data)
 
-        # test df creation et save
-        validation_df = X_val.copy()
-        validation_df.to_csv(DATA_DIR / "my_validation_dataset_features.csv", index=False) # represente le X_val
-        validation_df['Hogwarts House'] = y_val.values
-        validation_df['Hogwarts House'].to_csv(DATA_DIR / "my_validation_dataset_target.csv", index=False) # ici le y_val
+        # save validation sets
+        store_df_to_csv(X_val, "my_validation_dataset_features", DATA_DIR)
+        store_df_to_csv(y_val, "my_validation_dataset_target", DATA_DIR)
 
-        print("Training models\n")
+        print("Training models...\n")
         models = {}
-        for house in HOGWART_HOUSES:
+        for house in params.hogwart_houses:
             print(f"\nTraining model for {house}...")
-            y_binary = (y_train == house).astype(int) # va servir a encoder le 0 ou 1 de la classe
-            model = LogisticRegressionTrainer(learning_rate=0.1, epochs=params.epochs)
+            y_binary = (y_train == house).astype(int) 
+            model = LogisticRegressionTrainer(params.learning_rate, params.epochs, params.optimization)
             model.fit(X_train, y_binary, callback, house)
             models[house] = model 
 
-        print("\nSaving model parameters")
-        save_model_weights(models, TRAINING_FEATURES)
+        print("\nSaving model parameters...")
+        save_model_weights(models, params.training_features)
         plot_costs(models, LOG_DIR)
     
     except Exception as e:
-        print(f'Something happened again: {e}')
+        print(f'Something happened: {e}')
 
 if __name__ == "__main__":
     main()
