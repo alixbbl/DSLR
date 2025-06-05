@@ -2,9 +2,9 @@
 ## Usage :
 
 Run these commands to get started :    
-`python3 -m venv dslr_env`     
-`source dslr_env/bin/activate`        
-`pip install -r requirements.txt`      
+- `python3 -m venv dslr_env`     
+- `source dslr_env/bin/activate`        
+- `pip install -r requirements.txt`      
 
 
 ## Our dataset 
