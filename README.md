@@ -20,13 +20,14 @@ The main librairies for vizualisation are matplotlib (foundation) and seaborn wh
 ## Data Visualisation
  
 We start by calculating the statistics of our preprocessed dataset which can be found in `output/describe/statistics.csv`. 
-Quelques notions de statistiques utiles :    
+Some useful statistical concepts:
 
-✅ MEAN : The average — the sum of all values divided by the number of values.
-
-✅ STD ou Ecart-type : A measure of how spread out the data is around the mean. A higher standard deviation means the values are more dispersed from the average.
-
-✅ Quartiles : They divide a dataset into four equal parts: up to 25%, 50%, 75%, and 100%. This helps to understand the distribution of the dataset's values.
+✅ MEAN: The average — the sum of all values divided by the number of values.   
+✅ STD or Standard Deviation: A measure of how spread out the data is around the mean. A higher standard deviation means the values are more dispersed from the average.   
+✅ QUARTILES: Three values that split sorted data into four parts, each with an equal number of observations Quartiles & Quantiles | Calculation, Definition & Interpretation. Specifically:   
+- Q1 (First quartile): The 25th percentile, meaning that 25% of the data falls below the first quartile Quartiles & Quantiles | Calculation, Definition & Interpretation
+- Q2 (Second quartile/Median): The 50th percentile, meaning that 50% of the data falls below the second quartile Quartiles & Quantiles | Calculation, Definition & Interpretation
+- Q3 (Third quartile): The 75th percentile, meaning that 75% of the data falls below the third quartile Quartiles & Quantiles | Calculation, Definition & Interpretation
 
 <details>
 <summary><h5 style="display: inline; margin: 0;" >CSV File tip</h5></summary>   
