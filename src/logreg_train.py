@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from utils.config import params
 from sklearn.model_selection import train_test_split
-import plotly.express as px
+# import plotly.express as px
 from utils.upload_csv import upload_csv
 from utils.maths import MyMaths
 from typing import Tuple

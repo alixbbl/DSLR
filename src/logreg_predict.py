@@ -157,3 +157,5 @@ if __name__ == "__main__":
                         help = """Optionnal - Truth CSV file to read and calculate accuracy of the modele.""")
     parsed_args = parser.parse_args()
     main(parsed_args)
+
+#python logreg_predict.py --path_truth_csv ../data/dataset_truth.csv

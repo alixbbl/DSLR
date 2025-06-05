@@ -5,9 +5,10 @@ class Config():
     # paths
     LOG_DIR = Path("output/logreg")
     DATA_DIR = Path("data")
-    training_data_path = "data/dataset_train.csv"
-    validation_data_path = "my_validation_dataset.csv"
-    test_data_path = "data/dataset_test.csv"
+    training_data_path_features = "../data/dataset_train.csv"
+    validation_data_path_features = "my_validation_dataset_features.csv"
+    validation_data_path_target = "my_validation_dataset_target.csv"
+    test_data_path = "../data/dataset_test.csv"
     weights_file = LOG_DIR / "model_params.npy"
     standardization_params = "standardization_params.csv"
 
@@ -36,6 +37,5 @@ class Config():
     # optimization = "gradient_descent"
     # optimization = "stochastic_gradient_descent"
     optimization = "mini_batch_gradient_descent"
-
 
 params = Config()
