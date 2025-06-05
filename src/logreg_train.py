@@ -1,150 +1,260 @@
 import pandas as pd
 import numpy as np
-import argparse
-from typing import List, Tuple
+from utils.config import params
+from sklearn.model_selection import train_test_split
+import plotly.express as px
 from utils.upload_csv import upload_csv
-from utils.constants import EXPECTED_LABELS_SET, EXPECTED_LABELS_LIST, MANDATORY_FEATURES_SET, TRAINING_FEATURES_LIST
-from utils.utils_logistic_regression import log_loss, write_output_constants_standard, write_output_thetas, plot_cost_report
 from utils.maths import MyMaths
+from typing import Tuple
+import matplotlib.pyplot as plt
 
-class Trainer():
+LOG_DIR = params.LOG_DIR
+DATA_DIR = params.DATA_DIR
+HOGWART_HOUSES = params.hogwart_houses
+TRAINING_FEATURES = params.training_features
+
+class LogisticRegressionTrainer():
     
-    def __init__(self, dataframe, max_it, learning_rate, relevant_feat):
-        self.df = dataframe
-        self.data_to_train = None # pd.DataFrame
-        self.data_train_std = None # pd.Series
-        self.data_train_mean = None  # pd.Series
-        self.max_iterations = max_it
+    def __init__(self, learning_rate = params.learning_rate, 
+                 max_iterations = params.max_iterations,
+                 X_train = None, 
+                 y_train = None):
         self.learning_rate = learning_rate
-        self.relevant_features = relevant_feat
-        self.labels = set(self.df['Hogwarts House'].unique())
-        if self.labels != EXPECTED_LABELS_SET:
-            raise ValueError('This is NOT an Hogwarts House !')
-
-    def ft_is_valid_training_dataframe(self):
-        """"
-            This functions checks if the dataset is valid for training the model and contains
-            the required training classes.
+        self.max_iterations = max_iterations
+        self.optimization = params.optimization
+        self.X = X_train
+        self.y = y_train
+        self.cost_history = []
+        print(f"Optimization method: {self.optimization}")
+    
+    def initialize_parameter(self):
         """
-        if ('Hogwarts House') not in self.df.columns:
-            raise Exception('Sorry, this is not a proper training dataset')
-        columns_list = list(self.df.columns)
-        if not MANDATORY_FEATURES_SET <= set(columns_list):
-            raise Exception('Magic hat needs more than that to perform its magic !')
-        return True
-    
-    def ft_prepare_data(self) -> None:
-        """"
-            This function retuns a valid dataset for training by adding the default theta0 column, 
-            required for scalar product and bias, and by deleting the null entries in the dataset (only 
-            valid for a few null entries < 5%).
+            Initializes the parameters of the model.
         """
-        self.df.dropna(subset=self.relevant_features, inplace=True)
-        self.data_to_train = self.df[self.relevant_features].copy() # on fait une copie plutot qu'une reference
-        self.data_train_std, self.data_train_mean, self.data_to_train= self.ft_standardize_data(self.data_to_train)
-        write_output_constants_standard(self.data_train_mean, self.data_train_std)
-        self.data_to_train.insert(0, "theta0", np.ones(self.data_to_train.shape[0])) # on ajoute une colonne de 1 pour le produit scalaire (a faire pour tous les cas de reg lin ou log)
-        self.ft_encode_data() # on encode a la fin pour garder les binaires 0 et 1
-
-    def ft_encode_data(self):
-        """"
-            This function transforms the categorical column 'Hogwarts House' in a nunerical
-            column to enhance the models training.
-        """
-        for feature in EXPECTED_LABELS_SET: # on ajoute les 4 colonnes de 0 ou 1 pour le one-hot-encoding
-            self.data_to_train[feature] = [1 if ele == feature else 0 for ele in self.df['Hogwarts House']]
-
-    # Utilisation de apply() qui permet de calculer colonne a colonne sans boucle for
-    def ft_standardize_data(self, mx: pd.DataFrame) -> Tuple[pd.Series, pd.Series, pd.DataFrame]:
-        """"
-            This functions takes a matrix and returns a tuple of calculated elements : 
-            the matrix std and mean, and the standardized matrix to operate. 
-        """
-        maths = MyMaths()
-        mx_std = mx.apply(maths.my_std) # on applique la fonction a chaque colonne et retourne une Serie des std de chaque colonne
-        mx_mean = mx.apply(maths.my_mean) # idem avec les moyennes de chaque col. apply() agir comme une boucle for
-        mx_standardized = (mx - mx_mean) / mx_std
-        return [mx_std, mx_mean, mx_standardized]   
-    
-    # fonction utilitaire utilisee pour convertir un nombre en une probabilite de 0 a 1,
-    # ici 0 est "faux" et 1 est "vrai" concernant une tache de classification.
-    def ft_sigmoid(self, x):
-        """Classic sigmoid function, converts any number in a 0 to 1 probability."""
-        return 1 / (1 + np.exp(-x)) 
-    
-    # on rprend la strcuture de la fonction de Linear Regression qui permet de calculer la descente de gradient et donc
-    # de chercher le minimum de la fonction de cout (differente de celle de la RegLin)
-    # Rappels : X est la matrice des features et y est la variable cible
-    # m est le nombre d'entrees du dataset et n le nbre de features, cost_report stocke le loss a chaque iteration du training
-    def ft_gradient_descent(self, X, y, max_iterations, learning_rate) -> Tuple[float, List[float]]:
-    
-        m, n = X.shape
-        theta = np.zeros((n, 1))
-        cost_report = []
-        y = y.values.reshape(-1, 1)
-    
-        for i in range(max_iterations):
-            y_predictions = self.ft_sigmoid(X.dot(theta)) # on multiplie la matrice des km normalises par le vecteur (0, 0), debut de la descente de gradient
-            errors = y_predictions - y # on calcule l'erreur entre la matrice prediction et la matrice des prix reels du dataset
-            gradient = (1 / m) * X.T.dot(errors) # formule du gradient
-            theta -= learning_rate * gradient # formule d'actualisation de theta (theta0, theta1) l'intercept et la pente
-            log_loss_value = log_loss(y, y_predictions) # injecter la fonction de log_loss qui est la fonction de cout en LogReg
-            cost_report.append(log_loss_value)
-
-        return theta, cost_report
+        self.W = np.zeros(self.X.shape[1])
+        self.b = 0.0
         
-    def ft_train(self) -> Tuple[float, List[float]]:
-        """"
-            This function performs a training for each of the houses.
+    def sigmoid(self, z: np.ndarray):
         """
-        # on realise le training pour chacune des maisons separement (cost loss function est binaire)
-        list_thetas = {}
-        dict_cost_reports = {}
-        X = self.data_to_train[self.relevant_features]
+            Sigmoid activation function.
+        """
+        return 1 / (1 + np.exp(-z))
         
-        for house in EXPECTED_LABELS_LIST:
-            y_house = self.data_to_train[house]
-            list_thetas[house], dict_cost_reports[house] = self.ft_gradient_descent(X, y_house, self.max_iterations, self.learning_rate) 
+    def forward(self, X: np.ndarray):
+        """
+            Computes forward propagation for given input X.
+        """
+        Z = np.matmul(X, self.W) + self.b
+        A = self.sigmoid(Z)
+        return A
+    
+    def compute_cost(self, predictions: np.ndarray):
+        """
+            Compute binary cross-entropy loss.
+        """
+        m = self.X.shape[0]  
+        cost = np.sum((-np.log(predictions + 1e-8) * self.y) + (-np.log(1 - predictions + 1e-8)) * (1 - self.y))
+        cost = cost / m
+        return cost
+    
+    def compute_gradient(self, predictions: np.ndarray):
+        """
+            Computes the gradients for the model using given predictions.
+        """
+        m = self.X.shape[0]
+        # compute gradients
+        self.dW = np.matmul(self.X.T, (predictions - self.y))
+        self.db = np.sum(np.subtract(predictions, self.y))
+        # scale gradients
+        self.dW = self.dW * 1 / m
+        self.db = self.db * 1 / m    
 
-        return list_thetas, dict_cost_reports # list_thetas retourne les coeff ou "poids" par feature 
+    def fit(self, X, y):
+        """
+            Train the model using the selected optimization method.
+        """
+        self.X = X
+        self.y = y
+        self.m = X.shape[0]
+        self.initialize_parameter()
+
+        for i in range(self.max_iterations):
+            if self.optimization == "gradient_descent":
+                predictions = self.forward(self.X)
+                self.compute_gradient(predictions)
+                self.W -= self.learning_rate * self.dW
+                self.b -= self.learning_rate * self.db
+
+            elif self.optimization == "stochastic_gradient_descent":
+                random_index = np.random.randint(0, self.m)
+                X_sample = self.X[random_index:random_index+1]
+                y_sample = self.y[random_index:random_index+1]
+                z_sample = np.dot(X_sample, self.W) + self.b
+                prediction_sample = self.sigmoid(z_sample)
+                self.dW = X_sample.T.dot(prediction_sample - y_sample)
+                self.db = np.sum(prediction_sample - y_sample)
+                self.W -= self.learning_rate * self.dW
+                self.b -= self.learning_rate * self.db
+
+            elif self.optimization == "mini_batch_gradient_descent":
+                batch_size = params.batch_size
+                num_batches = int(np.ceil(self.m / batch_size))
+                shuffled_indices = np.random.permutation(self.m)
+
+                for j in range(num_batches):
+                    start_idx = j * batch_size
+                    end_idx = min((j + 1) * batch_size, self.m)
+                    batch_indices = shuffled_indices[start_idx:end_idx]
+                    X_batch = self.X.iloc[batch_indices].values
+                    y_batch = self.y.iloc[batch_indices].values
+                    z_batch = np.dot(X_batch, self.W) + self.b
+                    prediction_batch = self.sigmoid(z_batch)
+                    dW = X_batch.T.dot(prediction_batch - y_batch)
+                    db = np.sum(prediction_batch - y_batch)
+                    self.W -= self.learning_rate * dW
+                    self.b -= self.learning_rate * db
+
+            else:
+                raise ValueError("Invalid optimization method. Choose 'gradient_descent', 'stochastic_gradient_descent', or 'mini_batch_gradient_descent'.")
+
+            if i % 200 == 0 or i == self.max_iterations - 1:
+                all_preds = self.forward(self.X)
+                cost = self.compute_cost(all_preds)
+                self.cost_history.append(cost)
+                print(f"Cost after iteration {i}: {cost}")
+
+# ************************************* DATA PREPROCESSING **************************************
+
+def ft_standardize(df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Series, pd.Series]:
+    """
+        Standardize features to mean=0 and std=1.
+        :param df: DataFrame
+        :return: standardized DataFrame
+    """
+    maths = MyMaths()
+    std = df.apply(maths.my_std) 
+    mean = df.apply(maths.my_mean)
+    stats = pd.DataFrame({'mean': mean, 'std': std})
+    stats.to_csv(LOG_DIR / "standardization_params.csv")
+    return (df - mean) / std, mean, std
+
+def apply_standardization(df: pd.DataFrame, mean: pd.Series, std: pd.Series)-> pd.DataFrame:
+    """
+        Takes mean and std of the X_train dataset and applies to another dataset(X_val, ...).
+    """
+    return (df - mean) / std
+
+def prepare_data(data: pd.DataFrame):
+    """
+        Clean and prepare data for training, splitting must be applied before standardization to avoid any data leakage.
+        arguments: Dataset.
+        returns: 2 datasets for training and 2 for model validation.
+    """
+    data = data.dropna(subset=TRAINING_FEATURES) # ok de drop les nan ici pour le training et validation
+    X = data[TRAINING_FEATURES].copy()
+    y = data['Hogwarts House'].copy()
+    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=params.test_size, random_state=params.seed)
+    
+    if params.standardize:
+        X_train, mean, std = ft_standardize(X_train)
+        X_val = apply_standardization(X_val, mean, std)
+
+    return (X_train, X_val, y_train, y_val)
+        
+    
+# ************************************* START / END  **************************************
+
+
+def launch_trainer(X: pd.Series, y: pd.Series):
+    """
+        Train one-vs-all logistic regression models.
+    """
+    models = {}
+    for house in HOGWART_HOUSES:
+        print(f"\nTraining model for {house}...")
+        y_binary = (y == house).astype(int) # va servir a encoder le 0 ou 1 de la classe
+        model = LogisticRegressionTrainer(learning_rate=0.1, max_iterations=1000)
+        model.fit(X, y_binary)
+        models[house] = model 
+    return models
+
+def save_model_weights(models: dict, feature_names: list):
+    """
+        Save model weights and parameters to files
+    """    
+    print(feature_names)
+    all_params = {}
+    
+    for house, model in models.items():
+        W = model.W.values if isinstance(model.W, pd.Series) else model.W
+        model_params = {
+            'W': W.tolist(),
+            'b': model.b,
+            'learning_rate': model.learning_rate,
+            'iterations': model.max_iterations,
+            'features': feature_names
+        }
+        all_params[house] = model_params  
+        
+        with open(LOG_DIR / f"{house}_weights.txt", 'w') as f:
+
+            f.write(f"Model weights for {house}:\n\n")
+            f.write(f"Bias: {model.b}\n\n")
+            f.write("Feature weights:\n")
+            for i, feature in enumerate(feature_names):
+                f.write(f"{feature}: {W[i]}\n")
+            f.write(f"\nLearning rate: {model.learning_rate}\n")
+            f.write(f"Iterations: {model.max_iterations}\n")
+            f.write(f"Final cost: {model.cost_history[-1] if model.cost_history else 'N/A'}\n")
+    
+    np.save(LOG_DIR / "model_params.npy", all_params)
+    print(f"Model weights saved to {LOG_DIR}")
+  
+# ******************************* DATA VISUALIZATION ********************************
+
+def plot_costs(models, LOG_DIR):
+
+    for house, model in models.items():
+        plt.plot(model.cost_history, label=house)
+
+    plt.xlabel('Iterations')
+    plt.ylabel('Cost (Loss)')
+    plt.title(f'Cost function over iterations ({params.optimization})')
+    plt.legend()
+    plt.grid(True)
+    filepath = LOG_DIR / f'Model_cost_figures({params.optimization}).png'
+    plt.savefig(filepath)
+    plt.show()
+
 
 # *************************************** MAIN **************************************
 
-def main(parsed_args):
+
+def main():
+        
+    LOG_DIR.mkdir(parents=True, exist_ok=True)
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    data = upload_csv(params.training_data_path)
     
     try:
-        df = upload_csv(parsed_args.path_csv)
-        if df is None: return
-        try:
-            trainer=Trainer(df, 
-                            parsed_args.max_it, 
-                            parsed_args.learning_rate,
-                            TRAINING_FEATURES_LIST)      
-            if trainer.ft_is_valid_training_dataframe():
-                trainer.ft_prepare_data()
-                list_thetas, dict_cost_reports = trainer.ft_train()
-                write_output_thetas(list_thetas)
-                plot_cost_report(dict_cost_reports)
+        print("Preparing data for training :\n")
+        X_train, X_val, y_train, y_val = prepare_data(data)
 
-        except Exception as e:
-            print(f'Something happened : {e}')
+        # test df creation et save
+        validation_df = X_val.copy()
+        validation_df.to_csv(DATA_DIR / "my_validation_dataset_features.csv", index=False) # represente le X_val
+        validation_df['Hogwarts House'] = y_val.values
+        validation_df['Hogwarts House'].to_csv(DATA_DIR / "my_validation_dataset_target.csv", index=False) # ici le y_val
+
+        print("Training models\n")
+        models = launch_trainer(X_train, y_train)
+        
+        print("\nSaving model parameters")
+        save_model_weights(models, TRAINING_FEATURES)
+        plot_costs(models, LOG_DIR)
+    
     except Exception as e:
         print(f'Something happened again: {e}')
 
-
 if __name__ == "__main__":
-    parser=argparse.ArgumentParser()
-    parser.add_argument('-p', '--path_csv',
-                        type=str,
-                        default="./data/dataset_train.csv",
-                        help="""Path of CSV file to read""")
-    parser.add_argument('-i', '--max_it',
-                        type=int,
-                        default=1000,
-                        help="""Max iterations to go through the regression.""")
-    parser.add_argument('-l', '--learning_rate',
-                        type=float,
-                        default=0.01,
-                        help="""Learning rate of the model.""")    
-    parsed_args=parser.parse_args()
-    main(parsed_args)
+    main()

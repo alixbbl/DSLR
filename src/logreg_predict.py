@@ -1,110 +1,159 @@
 import pandas as pd
 import numpy as np
 import argparse
-from typing import List, Tuple
+from pathlib import Path
+from utils.config import params
 from utils.upload_csv import upload_csv
-from utils.constants import TRAINING_FEATURES_LIST, USELESS_COLUMNS_PREDICTING_PHASE
-from utils.utils_logistic_regression import write_output_predictions
+from utils.metrics import calculate_accuracy
+from utils.store import save_predictions
 
-class Tester():
+LOG_DIR = params.LOG_DIR
+DATA_DIR = params.DATA_DIR
+HOGWART_HOUSES = params.hogwart_houses
+TRAINING_FEATURES = params.training_features
 
-    def __init__(self, dataframe, thetas, standard_constants):
-        self.df = dataframe
-        self.prediction_dataset = pd.DataFrame()
-        self.thetas = thetas
-        self.constants_stand = standard_constants
+class LogisticRegressionPredictor:
+    def __init__(self, weights_file=None):
+        self.weights_file = params.weights_file if weights_file else str(LOG_DIR / "model_params.npy")
+        self.models = {}
+        self.feature_names = TRAINING_FEATURES
+        self.load_weights()
     
-    def ft_is_valid_testing_dataframe(self):
-        """"
-            This functions checks if the dataset is valid for testing the model and contains
-            the required testing classes.
+    def load_weights(self):
         """
-        columns_set = set(self.df.columns)
-        if not set(TRAINING_FEATURES_LIST) <= columns_set:
-            raise Exception('Magic hat needs more than that to perform its magic ! Features must be similar !')
-        restrained_dataset = self.df[TRAINING_FEATURES_LIST]
-        for feature, expected_feature_type in zip(TRAINING_FEATURES_LIST, restrained_dataset.dtypes):
-            if restrained_dataset[feature].dtype != expected_feature_type:
-                raise Exception(f'Feature {feature} type in testing must be the same as in training !')    
-        return True
+            Load the trained weights from file
+        """
+        try:
+            all_params = np.load(self.weights_file, allow_pickle=True).item()
+            
+            for house, params_dict in all_params.items():
+                self.models[house] = {
+                    'W': np.array(params_dict['W']),
+                    'b': params_dict['b']
+                }
+                
+                if 'features' in params_dict:
+                    self.feature_names = params_dict['features']
+            
+            print(f"Successfully loaded weights for {len(self.models)} houses.")
+        except Exception as e:
+            raise Exception(f"Error loading model weights: {e}")
     
-    def ft_standardize_data(self) -> None:
+    def sigmoid(self, z):
         """
-        Standardize the prediction dataset using the constants in self.constants_stand.
+            Sigmoid activation function
         """
-        constants = self.constants_stand.set_index("Feature")
-        mx_mean = constants["Mean"]
-        mx_std = constants["Std"]
-        features_to_standardize = [f for f in self.prediction_dataset.columns if f in mx_mean.index]
-        for feature in features_to_standardize:
-            self.prediction_dataset[feature] = (
-                self.prediction_dataset[feature] - mx_mean[feature]
-            ) / mx_std[feature]
-
-    def ft_prepare_prediction_dataset(self):
-        self.df = self.df.drop(columns=USELESS_COLUMNS_PREDICTING_PHASE)
-        for feature in TRAINING_FEATURES_LIST:
-            self.prediction_dataset[feature] = self.df[feature]
-        self.prediction_dataset.fillna(self.prediction_dataset.mean(), inplace=True) # imputation par la moyenne
-        self.ft_standardize_data()
-
-    def ft_stable_sigmoid(self, x):
-        return np.where(x >= 0, 1 / (1 + np.exp(-x)), np.exp(x) / (1 + np.exp(x)))
-
-    def ft_predict(self):
-        X = self.prediction_dataset.copy()
-        X.insert(0, 'Bias', 1)
-        X = X.to_numpy(dtype=float)
-
-        thetas_df = self.thetas.copy()
-        thetas_df = thetas_df.set_index("Hogwarts House")
-        thetas_df.insert(0, "Bias", 0.0)
-
-        features = list(thetas_df.columns)
-        thetas = thetas_df[features].to_numpy(dtype=float)
-
-        Z = np.dot(X, thetas.T)
-        probas = self.ft_stable_sigmoid(Z)
-        hogwarts_houses = list(thetas_df.index)
-        predicted_classes_indices = np.argmax(probas, axis=1)
-        predictions = [hogwarts_houses[i] for i in predicted_classes_indices]
-
+        return 1 / (1 + np.exp(-z))
+    
+    def predict_proba(self, X):
+        """
+            Predict probabilities for each house
+            
+            :param X: Features DataFrame
+            :return: dictionary of probabilities for each house
+        """
+        if params.standardize:
+            X = standardize_with_saved_params(X, LOG_DIR / params.standardization_params)
+    
+        probabilities = {}
+        for house, model in self.models.items():
+            W = model['W']
+            b = model['b']
+            z = np.dot(X.values, W) + b
+            probabilities[house] = self.sigmoid(z)
+        return probabilities
+    
+    def predict(self, X):
+        """
+            Predict the house with highest probability for each student
+            
+            :param X: Features DataFrame
+            :return: list of predicted houses
+        """
+        probabilities = self.predict_proba(X)
+        predictions = [""] * len(X)
+        
+        for i in range(len(X)):
+            best_house = None
+            best_prob = -1
+            
+            for house, probs in probabilities.items():
+                if probs[i] > best_prob:
+                    best_prob = probs[i]
+                    best_house = house
+            predictions[i] = best_house
         return predictions
 
+def ft_imputation_by_mean(df: pd.DataFrame) -> pd.DataFrame:
+    """
+        Replaces all the NaN by the mean of each Series.
+    """
+    prediction_dataset = pd.DataFrame()
+    for feature in df.columns:
+        prediction_dataset[feature] = df[feature]
+    prediction_dataset.fillna(prediction_dataset.mean(), inplace=True) # imputation par la moyenne
+    return prediction_dataset
 
-# *************************************** MAIN **************************************
+def standardize_with_saved_params(df: pd.DataFrame, stats_path: Path):
+    """
+        Using the standardization parameters of the training phase.
+    """
+    stats = pd.read_csv(stats_path, index_col=0)
+    mean = stats['mean']
+    std = stats['std']
+    return (df - mean) / std
+
+
+# ****************************************** MAIN ***************************************************
+
 
 def main(parsed_args):
-    try:
-        df = upload_csv(parsed_args.path_csv)
-        thetas = upload_csv(parsed_args.thetas_file)
-        standards = upload_csv(parsed_args.standard_file)
-        if df is None or thetas is None: return
-        try:
-            tester=Tester(df, thetas, standards)
-            if tester.ft_is_valid_testing_dataframe():
-                tester.ft_prepare_prediction_dataset()
-                predictions = tester.ft_predict()
-            write_output_predictions(predictions)
+    
+    LOG_DIR.mkdir(parents=True, exist_ok=True)
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
 
+    print(f"Loading test data from {params.test_data_path}...")
+    data_test = upload_csv(params.test_data_path)
+    
+    try:        
+        print("Preparing test data...")
+        X = data_test[TRAINING_FEATURES].copy()
+        try:
+            X = ft_imputation_by_mean(X)
         except Exception as e:
-            print(f'Something happened : {e}')
+            raise Exception(f"Preparing data error: {e}")
+        
+        try:
+            predictor = LogisticRegressionPredictor()
+            print("Making predictions...")
+            predictions = predictor.predict(X)
+            save_predictions(predictions, LOG_DIR / "houses.csv")
+        except Exception as e:
+            raise Exception(f"Prediction logic error: {e}")
+        
+        # calcul de perfomance si le fichier de verites terrain est fourni : 
+        if parsed_args.path_truth_csv:
+            data_truth = upload_csv(parsed_args.path_truth_csv)
+            if 'Index' in data_truth.columns:
+                data_truth.drop(columns='Index', inplace=True)
+            y_truth = data_truth['Hogwarts House']
+            y_pred = predictions
+            try :
+                accuracy = calculate_accuracy(y_pred, y_truth)
+                print(f"Accuracy: {accuracy:.4f} ({accuracy * 100:.2f}%)")
+            except:
+                raise Exception(f'Calculating accuracy failure : {e}')
+    
     except Exception as e:
-        print(f'Something happened again: {e}')
+        print(f"Error during prediction: {e}")
+
 
 if __name__ == "__main__":
-    parser=argparse.ArgumentParser()
-    parser.add_argument('-p', '--path_csv',
-                        nargs='?',
-                        type=str,
-                        help="""Path of CSV file to read""")
-    parser.add_argument('-s', '--standard_file',
-                        nargs='?',
-                        type=str,
-                        help="""Path of CSV file containing the constants to standardize.""")
-    parser.add_argument('-t', '--thetas_file',
-                        nargs='?',
-                        type=str,
-                        help="""Path of CSV file containing the thetas for predictions.""")
-    parsed_args=parser.parse_args()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--path_truth_csv',
+                        type = str,
+                        default = None,
+                        help = """Optionnal - Truth CSV file to read and calculate accuracy of the modele.""")
+    parsed_args = parser.parse_args()
     main(parsed_args)
