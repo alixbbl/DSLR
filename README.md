@@ -4,7 +4,8 @@
 Run these commands to get started :    
 - `python3.11 -m venv dslr_env`     
 - `source dslr_env/bin/activate`        
-- `pip install -r requirements.txt`      
+- `pip install -r requirements.txt`     
+- `cd src && tensorboard --logdir=output/logreg`
 
 
 ## Provided dataset 
