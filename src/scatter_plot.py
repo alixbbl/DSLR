@@ -89,8 +89,8 @@ def scatter_plot_correlation_matrix(correlation_df: pd.DataFrame, threshold: flo
                     bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="gray", alpha=0.8)
                 )
                 plt.tight_layout()
-                plt.show()
                 plt.savefig(f'{LOG_DIR}/{course1}_vs_{course2}.png')
+                plt.show()
                 plt.close()
 
 # **************************** MAIN *******************************
