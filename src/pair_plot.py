@@ -70,7 +70,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--path_csv_to_read",
-        default="../data/dataset_train.csv",
         type=str,
         help="CSV file path to read",
     )

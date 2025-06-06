@@ -8,6 +8,13 @@ Run these commands to get started :
 - `pip install -r requirements.txt`     
 - `cd src && tensorboard --logdir=output/logreg`
 
+Then, to launch the data visualisations : 
+- `cd src`
+- `python describe.py --path_csv_to_read ../data/dataset_train.py`
+- `python histogram.py --path_csv_to_read ../data/dataset_train.py`
+- `python pair_plot.py --path_csv_to_read ../data/dataset_train.py`
+- `python scatter_plot.py --path_csv_to_read ../data/dataset_train.py`
+
 
 ## Provided dataset 
 

@@ -261,7 +261,6 @@ if __name__ == "__main__":
     parser.add_argument(
         "--path_csv_to_read",
         type=str,
-        default="../data/dataset_train.csv",
         help="""CSV file to read""",
     )
     parsed_args = parser.parse_args()
