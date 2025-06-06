@@ -1,7 +1,4 @@
-## TODO
-
-[x] probleme des paths selon la ou on est, find a way to add absolute ones
-[x] rewrite fit to make it nicer
+# Logistic Regression Model Steps (Three Optimization Algorithms)
 
 ## Usage 
 
@@ -21,6 +18,295 @@ A Hogwarts student dataset with the following columns, splitted into two categor
 * Course scores: Arithmancy, Astronomy, Herbology, Defense Against the Dark Arts, Divination, Muggle Studies, Ancient Runes, History of Magic, Transfiguration, Potions, Care of Magical Creatures, Charms, Flying
 
 The main librairies for vizualisation are matplotlib (foundation) and seaborn which is built on matplotlib but it is more suited to statistical visualisations and it has great aesthetics. Plus, the syntax is less complex. Pandas has built in plotting but it is too simple for what we are being asked to produce.
+
+## Overview of Logistic Regression Pipeline
+
+```
+Data Input → Forward Pass → Cost Calculation → Gradient Computation → Parameter Update → Repeat
+```
+
+Let's walk through each step and see how the three optimization methods handle them differently.
+
+---
+
+## Step 1: 🔧 **Initialization**
+*Same for all optimizers*
+
+```python
+def initialize_parameter(self):
+    self.W = np.zeros(self.X.shape[1])  # Weights for each feature
+    self.b = 0.0                        # Bias term
+```
+
+**What happens:**
+- Initialize weights W to zeros (one weight per feature)
+- Initialize bias b to zero
+- Set up data references (X, y, m=number of samples)
+
+---
+
+## Step 2: 🎯 **Forward Propagation** 
+*Implementation varies by optimizer*
+
+### **Core Forward Pass (same logic, different data)**
+```python
+def forward(self, X):
+    Z = np.matmul(X, self.W) + self.b    # Linear combination
+    A = self.sigmoid(Z)                   # Apply sigmoid activation
+    return A
+
+def sigmoid(self, z):
+    return 1 / (1 + np.exp(-z))          # Convert to probabilities [0,1]
+```
+
+### **🔀 BRANCHING: Data Selection Differs**
+
+#### **Branch A: Gradient Descent**
+```python
+def gradient_descent_step(self):
+    predictions = self.forward(self.X)  # ← Uses ALL data (entire dataset)
+```
+- **Data used**: Complete dataset (all m samples)
+- **Memory**: High (processes all data at once)
+- **Computation**: Most expensive per step
+
+#### **Branch B: Stochastic Gradient Descent**
+```python
+def stochastic_gradient_descent_step(self):
+    random_index = np.random.randint(0, self.m)
+    X_sample = self.X[random_index:random_index+1]  # ← Uses 1 sample only
+    y_sample = self.y[random_index:random_index+1]
+    predictions = self.forward(X_sample)
+```
+- **Data used**: Single random sample
+- **Memory**: Minimal (only 1 sample)
+- **Computation**: Fastest per step
+
+#### **Branch C: Mini-batch Gradient Descent**
+```python
+def mini_batch_gradient_descent_step(self):
+    batch_size = params.batch_size  # e.g., 32 samples
+    for batch_indices in self.get_batch_indices(batch_size):
+        X_batch = self.X.iloc[batch_indices].values  # ← Uses small batch
+        y_batch = self.y.iloc[batch_indices].values
+        predictions_batch = self.forward(X_batch)
+```
+- **Data used**: Small batches (e.g., 32 samples)
+- **Memory**: Moderate (batch-sized chunks)
+- **Computation**: Balanced approach
+
+---
+
+## Step 3: 💰 **Cost Calculation**
+*Same formula, different timing*
+
+```python
+def compute_cost(self, predictions, y):
+    m = len(y)
+    cost = np.sum((-np.log(predictions + 1e-8) * y) + 
+                  (-np.log(1 - predictions + 1e-8)) * (1 - y))
+    return cost / m
+```
+
+**What happens:**
+- Binary cross-entropy loss calculation
+- Measures how far predictions are from actual labels
+- Lower cost = better model performance
+
+### **🔀 BRANCHING: When Cost is Calculated**
+
+#### **Branch A: Gradient Descent**
+- Cost calculated **once per epoch** using full dataset
+- Most accurate cost measurement
+- Smooth, decreasing cost curve
+
+#### **Branch B: SGD**
+- Cost calculated using **single sample** for gradient
+- But **full dataset cost** computed for monitoring
+- Noisy cost curve (fluctuates up and down)
+
+#### **Branch C: Mini-batch**
+- Cost calculated per **batch** for gradients
+- **Full dataset cost** computed for monitoring
+- Moderately smooth cost curve
+
+---
+
+## Step 4: 📐 **Gradient Computation**
+*Same math, different data sizes*
+
+```python
+def compute_gradient(self, X, predictions, y):
+    m = len(y)
+    dW = np.matmul(X.T, (predictions - y)) / m  # Gradient for weights
+    db = np.sum(predictions - y) / m            # Gradient for bias
+    return dW, db
+```
+
+**What happens:**
+- Calculate how much to change each weight (dW)
+- Calculate how much to change bias (db)
+- Direction pointing toward minimum cost
+
+### **🔀 BRANCHING: Gradient Quality**
+
+#### **Branch A: Gradient Descent**
+```
+Gradient quality: ⭐⭐⭐⭐⭐ (Most accurate)
+Uses all m samples → Most reliable direction
+```
+
+#### **Branch B: SGD**
+```
+Gradient quality: ⭐⭐ (Noisy but fast)
+Uses 1 sample → Less reliable direction, more randomness
+```
+
+#### **Branch C: Mini-batch**
+```
+Gradient quality: ⭐⭐⭐⭐ (Good balance)
+Uses batch_size samples → Good approximation of true gradient
+```
+
+---
+
+## Step 5: ⚡ **Parameter Update**
+*Same update rule, different frequencies*
+
+```python
+def update_parameters(self, dW, db):
+    self.W -= self.learning_rate * dW  # Update weights
+    self.b -= self.learning_rate * db  # Update bias
+```
+
+**What happens:**
+- Move parameters in direction opposite to gradient
+- Learning rate controls step size
+- Gradually improves model performance
+
+### **🔀 BRANCHING: Update Frequency**
+
+#### **Branch A: Gradient Descent**
+```
+Updates per epoch: 1
+Update timing: After processing entire dataset
+Step size: Large, stable steps
+```
+
+#### **Branch B: SGD**
+```
+Updates per epoch: m (number of samples)
+Update timing: After each single sample
+Step size: Small, frequent, noisy steps
+```
+
+#### **Branch C: Mini-batch**
+```
+Updates per epoch: m/batch_size (e.g., if m=1000, batch=32 → 31 updates)
+Update timing: After each batch
+Step size: Medium steps, good stability
+```
+
+---
+
+## Step 6: 🔄 **Training Loop**
+*Different convergence patterns*
+
+```python
+def fit(self, X, y, callback, house_name):
+    for epoch in range(self.epochs):
+        all_predictions = self.perform_optimization_step()  # ← Branches here
+        cost = self.compute_cost(all_predictions, self.y)
+        self.cost_history.append(cost)
+        self.log_progress(epoch, cost, callback, house_name)
+```
+
+### **🔀 BRANCHING: Convergence Behavior**
+
+#### **Branch A: Gradient Descent**
+```
+Convergence: Smooth, predictable descent
+Cost curve: ╲╲╲╲╲╲╲ (steady downward)
+Time per epoch: Slow (processes all data)
+Memory usage: High
+Best for: Small datasets, when you want stability
+```
+
+#### **Branch B: SGD**
+```
+Convergence: Fast but noisy
+Cost curve: ╲╱╲╱╲╱╲ (zigzag downward)
+Time per epoch: Fast (processes one sample at a time)
+Memory usage: Low
+Best for: Large datasets, when you want speed
+```
+
+#### **Branch C: Mini-batch**
+```
+Convergence: Balanced speed and stability
+Cost curve: ╲⩕╲⩕╲⩕╲ (slightly bumpy downward)
+Time per epoch: Medium
+Memory usage: Medium
+Best for: Most practical situations (default choice)
+```
+
+---
+
+## 🎯 **Complete Training Flow Comparison**
+
+### **Gradient Descent Flow:**
+```
+Epoch 1: Process ALL 1000 samples → Compute gradients → Update once
+Epoch 2: Process ALL 1000 samples → Compute gradients → Update once
+...
+```
+
+### **SGD Flow:**
+```
+Epoch 1: Sample 1 → Update → Sample 2 → Update → ... → Sample 1000 → Update
+Epoch 2: Sample 847 → Update → Sample 23 → Update → ... (random order)
+...
+```
+
+### **Mini-batch Flow:**
+```
+Epoch 1: Batch 1 (32 samples) → Update → Batch 2 → Update → ... → Batch 32 → Update
+Epoch 2: Shuffle data → Batch 1 → Update → Batch 2 → Update → ...
+...
+```
+
+## 🎓 **Key Takeaways**
+
+1. **Same Goal**: All three methods try to minimize the same cost function
+2. **Different Paths**: They take different approaches to get there
+3. **Trade-offs**: Speed vs. Stability vs. Memory usage
+4. **Use Cases**: 
+   - Small data → Gradient Descent
+   - Large data → SGD
+   - Most cases → Mini-batch (best of both worlds)
+
+The core logistic regression math stays the same - only the data processing strategy changes!
+    
+
+## Quick overview of the Linear Regression and Logistic Regression methods : 
+
+📈 Linear Regression   
+
+Goal	: Predict a continuous value (e.g., price, temperature)   
+Output	: A real number (e.g., 4.2, 101.7)   
+Model function	: A linear function: `y = θ₀ + θ₁x`   
+Error metric	: Mean Squared Error (MSE), MAE, etc.   
+Example	: Predicting a house price based on its size   
+
+📊 Logistic Regression   
+
+Goal	: Predict a probability of class membership (e.g., yes/no, 0/1)   
+Output	: A probability between 0 and 1   
+Model function	: A sigmoid function: `σ(z) = 1 / (1 + e^(-z)), where z = θ₀ + θ₁x`  
+Error metric	: Log-loss (cross-entropy loss)  
+Example	: Predicting whether a student is admitted (1) or not (0) based on their score  
+LogReg is then the best approach to handle a multiclass binary classification task like this Hogwarts Hat problem !   
+
 
 ## Data Visualisation
  
@@ -151,162 +437,3 @@ We can see here that interesting features are Herbology for example which allows
   <img src="./assets/pair_plot.png" />
 </p>
 </details> 
-    
-    
-## Logistic Regression One-vs-All    
-
-<details>
-<summary><h3 style="display: inline; margin: 0">Overview</h2></summary>
-
-<p align="center">
-  <img src="./assets/project.png" />
-</p>
-
-Inherently, machine learning models are binary classifiers. Logistic regression is a supervised machine learning algorithm used for classification tasks where the goal is to predict the probability that an instance belongs to a given class or not.
-
-The One-Versus-All (OvR) method decomposes a multi-class problem into multiple binary classification tasks, where each class is trained against all others using logistic regression.
-
-<p align="center">
-  <img src="./assets/onevsall.png" width="500" height="400" />
-</p>
-
-**The issue at hand : to which Hogwart house does the student belong ?**
-
-So in our case, there are 4 different "classes" which corresponds to the 4 different Hogwarts houses : Gryffindor, Hufflepuff, Ravenclaw, Slytherin. So N = 4, and we'll need to train 4 independent classifiers.
-
-</details>
-
-<details>
-<summary><h3 style="display: inline; margin: 0;"> Step by Step </h2></summary>
-
-<h4>Standardizing our data</h4>
-
-Standardization is a preprocessing technique used in machine learning to rescale and transform the features (variables) of a dataset to have a mean of 0 and a standard deviation of 1. For each data point (sample), subtract the mean (μ) of the feature and then divide by the standard deviation (σ) of the feature. 
-
-<p align="center">
- Standardized value = x − μ / σ
-</p>
-
-<h4>Train each binary classifier</h4>
-
-Logistic regression is a widely used model in machine learning for binary classification tasks. It models the probability that a given input belongs to a particular class. To train a logistic regression model, we aim to find the best values for the parameters (w,b) that best fit our dataset and provide accurate class probabilities.     
-
-The training process involves iteratively updating the weight vector (w) and bias term (b) to minimize the cost function. This is typically done through an optimization algorithm like gradient descent. The logistic regression model function is represented as:     
-
-<p align="center">
-fw, b(x) = g(w * x + b)   
-</p>
-
-- fw,b(x) : represents the predicted probability     
-- w : is the weight vector    
-- b : is the bias term    
-- x : is the input feature vector       
-- g(z) : is the sigmoid function     
-
-The Sigmoid activation function is as follows :    
-
-<p align="center">
-g(z) = 1 / (1 + e)^−z
-</p>
-
-<h3> Loss : Cross entropy </h3>
-<hr></hr>
-
-
-In general, a loss function is a mechanism to quantify how well a model’s predictions match the actual outcomes, rewarding the model for assigning higher probabilities to correct answers. With CEL : 
-
-- The more confident the model is in predicting the correct outcome, the lower the loss.
-- The more confident the model is in predicting in the wrong outcome, the higher the loss.
-
-For example, suppose we have a three-class classification problem (e.g., classifying an image as a dog, cat, or bird). For a single sample with True label: [1, 0, 0] (the correct class is “dog”).
-
-- Predicted probabilities: [0.7, 0.2, 0.1] (70% confident it’s a dog, 20% cat, 10% bird)
-- The CLE is around **0.357**
-
-If the model had been more confident the loss would be lower:
-- Predicted probabilities: [0.9, 0.05, 0.05],
-- The CLE is around **0.105**
-
-Conversely, if the model had predicted incorrectly with high confidence, the loss would be much higher:
-- Predicted probabilities: [0.1, 0.8, 0.1]
-- The CLE is around **2.303**
-
-Our predictions usually come in the form of logits — raw, unnormalized outputs from the last layer of a neural network — which are essentially a linear combination of the inputs to our final layer, so don’t have a probabilistic interpretation.
-
-To convert these into probabilities, it is common to apply the SoftMax function which preserves the relative ordering of the inputs and amplifies differences between large inputs, whilst ensuring the outputs sum to 1. Importantly, due to the normalization in the denominator, increasing one logit (and its corresponding probability) decreases the probabilities of other classes. This property aligns with our intuition that as a model becomes more confident in one class, it should become less confident in others.
-
-<p align="center">
-  <img src="./assets/cel.png" width="500" height="400" />
-</p>
-
-<h3> Optimization </h3>
-<hr></hr>
-The optimizers determine how the weights of the machine learning model are updated during backpropagation.
-
-<p align="center">
-  <img src="./assets/optimization_algorithms.png" width="500" height="400" />
-</p>
-
-<h1> GD FAMILY </h1>
-
-The gradient descent family of optimizers is one whereby our algorithm takes small steps on the steepest direction until reaching the lowest point. The goal is to find a set of parameters w* that minimizes the prediction cost f(w). 
-
-> Gradient Descent (GD) is an optimization algorithm for finding the optimal parameters of the model by iteratively updating them along the steepest direction of the loss landscape according to f(x). The drawback remains slow convergence / small updates in regions with gradual slope. 
-
-1. Gradient Descent / Batch Gradient Descent    
-Gradient Descent, often called "Batch Gradient Descent," uses the entire dataset to compute the gradient at each iteration. So we go through all the training samples and we calculate cumulative error. Then we back propagate and we adjust the weights. This is good for small training sets. If we had 10 million data points, we'd have to do a forward pass on 10 million samples per feature on each epoch. -> Use **all** training samples for one forward pass and then adjust the weights. This is inefficient if we have a large training set with regular GD every update requires computing gradients for an entire dataset. T
-
-2. Stochastic Gradient Descent   
-The trick in this case is to compute the Stochastic Gradient Descent which uses just one randomly selected training example to compute the gradient at each iteration. Ressource [here](https://www.youtube.com/watch?v=vMh0zPT0tLI&t=8s). It's quite useful here to accelarate the process, and because we have lots of redundancy in the data (clusters). -> Use **one** randomly picked sample for a forward pass and then adjust the weights.
-
-3. Mini Batch Gradient Descent    
-If you want to take advantage of vector maths and use more data points on each iteration, you can pass x random batches instead one sanmple. Mini-Batch Gradient Descent uses small random batches of training examples to compute gradients. -> Use **a batch of** randomly picked samples for a forward pass and then adjust the weights.
-
-<h1> Momentum-based optimizers </h1>
-
-1. Momentum optimizer    
-This extends SGD by accelerating training in regions where we are descending (like a ball in physics gaining momentum). The loss takes larger steps.
-
-2. Nestrov optimizer     
-Same update rule as the momentum optimizer but instead of computing the gradients using the current weights, it uses a "look ahead approach" (Nestrov Accelrated Gradients, NAG). It outperforms SGD and the classical momentum. It tries to fix the "overshooting" minima extra steps momentum has to take.  
-
-To implement these, we will use Torch and Tensorflow.
-
-<p align="center">
-  <img src="./assets/momentum.png" width="500" height="400" />
-</p>
-
-<h1> Adaptive Moment Optimizers (Adam) family optimizers </h1>
-
-A mix of both the above (SGD + Momentum). Today, it's SOTA for machine learning models' optimizers. 
-
-1. Adam  
-2. AdamW   
-
-<p align="center">
-  <img src="./assets/adam.png" width="500" height="400" />
-</p>
-
-A comparaison of them all [here](https://medium.com/@amannagrawall002/batch-vs-stochastic-vs-mini-batch-gradient-descent-techniques-7dfe6f963a6f).
-
-</details>
-
-## Quick overview of the Linear Regression and Logistic Regression methods : 
-
-📈 Linear Regression   
-
-Goal	: Predict a continuous value (e.g., price, temperature)   
-Output	: A real number (e.g., 4.2, 101.7)   
-Model function	: A linear function: `y = θ₀ + θ₁x`   
-Error metric	: Mean Squared Error (MSE), MAE, etc.   
-Example	: Predicting a house price based on its size   
-
-📊 Logistic Regression   
-
-Goal	: Predict a probability of class membership (e.g., yes/no, 0/1)   
-Output	: A probability between 0 and 1   
-Model function	: A sigmoid function: `σ(z) = 1 / (1 + e^(-z)), where z = θ₀ + θ₁x`  
-Error metric	: Log-loss (cross-entropy loss)  
-Example	: Predicting whether a student is admitted (1) or not (0) based on their score  
-LogReg is then the best approach to handle a multiclass binary classification task like this Hogwarts Hat problem !   
-
