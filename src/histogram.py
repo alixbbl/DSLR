@@ -9,72 +9,13 @@ from utils.upload_csv import upload_csv
 from utils.store import store_df_to_csv
 
 LOG_DIR = Path("output/histogram")
-
-# ********************** SOLUTION 0 *******************************
-
-
-def transform_data(data: pd.DataFrame) -> pd.DataFrame:
-    """ "
-    This function transforms the input DataFrame by dropping unnecessary columns
-    and melting the DataFrame to create a format suitable for plotting.
-
-    :param data: pd.DataFrame - The dataset to transform.
-    :return: pd.DataFrame - The transformed dataset.
-
-    """
-    columns_to_drop = ["Index", "First Name", "Last Name", "Birthday", "Best Hand"]
-    data_clean = data.drop(columns=columns_to_drop)
-    data_melted = pd.melt(
-        data_clean, id_vars=["Hogwarts House"], var_name="Course", value_name="Score"
-    )
-    print(data_melted.head())
-    return data_melted
-
-
-def display_histograms(data_melted: pd.DataFrame) -> None:
-
-    sns.set_theme(style="whitegrid")  # theme de seaborn pour láffichage
-    fig, axes = plt.subplots(
-        nrows=4, ncols=4, figsize=(16, 12)
-    )  # on divise l'espace en 16 volumes egaux
-    fig.tight_layout(pad=3.0)  # espace entre les graphes
-    courses = data_melted["Course"].unique()  # on recupere chaque nom de cours
-
-    # on parcourt les cours, pour chacun on va creer un sous-graphe (subplot)
-    for i, course in enumerate(courses):
-        ax = axes[i // 4, i % 4]  # positonner l'histo au bon endroit
-        course_data = data_melted[data_melted["Course"] == course]
-        # on peut ensuite creer l'histogramme pour chaque cours
-        sns.histplot(
-            course_data,
-            x="Score",
-            hue="Hogwarts House",
-            multiple="stack",
-            bins=20,
-            palette="Set2",
-            ax=ax,
-        )
-        ax.set_title(course, fontsize=10)
-        ax.set_xlabel("Score", fontsize=8)
-        ax.set_ylabel("Nb students graded", fontsize=8)
-        legend = ax.get_legend()
-        if legend:
-            legend.set_title("Poudlard Houses")
-            legend.get_title().set_fontsize(8)
-            for text in legend.get_texts():
-                text.set_fontsize(7)
-    total_plots = len(courses)
-    for j in range(total_plots, 16):  # 16 = nrows * ncols
-        fig.delaxes(axes[j // 4, j % 4])
-
-    fig.suptitle("Score Distribution by Course and School", fontsize=12)
-    plt.show()
+LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 
 # ********************** SOLUTION 1 *******************************
 
 
-def display_histograms_without_melting(data: pd.DataFrame) -> None:
+def display_histograms(data: pd.DataFrame) -> None:
     sns.set_theme(style="whitegrid")
     fig, axes = plt.subplots(nrows=4, ncols=4, figsize=(16, 12))
     fig.tight_layout(pad=3.0)
@@ -104,7 +45,7 @@ def display_histograms_without_melting(data: pd.DataFrame) -> None:
     plt.show()
 
 
-# ********************** SOLUTION 2 *******************************
+# ********************** BONUS *******************************
 
 
 def identify_course_homogeneity(data: pd.DataFrame) -> dict:
@@ -234,7 +175,6 @@ def store_homogeneity_metrics(metrics: dict, log_dir: Path):
 
 
 def main(parsed_args):
-    LOG_DIR.mkdir(parents=True, exist_ok=True)
 
     filepath = parsed_args.path_csv_to_read
     data = upload_csv(filepath)
@@ -242,15 +182,9 @@ def main(parsed_args):
     columns_to_drop = ["Index", "First Name", "Last Name", "Birthday", "Best Hand"]
     data = data.drop(columns=columns_to_drop)
 
-    # Solution 0
-    # data_melted = transform_data(data)
-    # store_df_to_csv(data_melted, "dataset_histogram", LOG_DIR, 2)
-    # display_histograms(data_melted)
+    display_histograms(data)
 
-    # Solution 1
-    display_histograms_without_melting(data)
-
-    # Solution 2
+    # [BONUS]
     # metrics = identify_course_homogeneity(data)
     # plot_homogeneity_max_min(data, metrics, LOG_DIR)
     # store_homogeneity_metrics(metrics, LOG_DIR)
