@@ -21,4 +21,5 @@ tabulate
 tensorflow
 threadpoolctl
 tzdata
+flake8
 
