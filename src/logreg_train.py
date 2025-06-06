@@ -24,14 +24,79 @@ class LogisticRegressionTrainer():
         self.optimization = optimization
         self.cost_history = []
         print(f"Optimization method: {self.optimization}")
-    
+
+    ## ------ LOG and INIT -----
+
+    def log_progress(self, epoch: int, cost: float, callback: TensorBoardCallback, house_name: str):
+        if callback:
+            callback.log_iteration(epoch, cost, house_name)
+        if epoch % 200 == 0 or epoch == self.epochs - 1:
+            print(f"Cost after iteration {epoch}: {cost}")
+
     def initialize_parameter(self):
         """
             Initializes the parameters of the model.
         """
         self.W = np.zeros(self.X.shape[1])
         self.b = 0.0
+
+    ## ------ OPTIMIZERS -----
+
+    def perform_optimization_step(self):
+        """Perform one optimization step based on the selected method."""
+        if self.optimization == "gradient_descent":
+            return self.gradient_descent_step()
+        elif self.optimization == "stochastic_gradient_descent":
+            return self.stochastic_gradient_descent_step()
+        elif self.optimization == "mini_batch_gradient_descent":
+            return self.mini_batch_gradient_descent_step()
+        else:
+            raise ValueError(
+                "Invalid optimization method. Choose 'gradient_descent', "
+                "'stochastic_gradient_descent', or 'mini_batch_gradient_descent'."
+            )
+
+    def gradient_descent_step(self):
+        """Perform one gradient descent step using the full dataset."""
+        predictions = self.forward(self.X)
+        dW, db = self.compute_gradient(self.X, predictions, self.y)
+        self.update_parameters(dW, db)
+        return predictions
+    
+    def stochastic_gradient_descent_step(self):
+        """Perform one SGD step using a single random sample."""
+        random_index = np.random.randint(0, self.m)
+        X_sample = self.X[random_index:random_index+1]
+        y_sample = self.y[random_index:random_index+1]
         
+        predictions = self.forward(X_sample)
+        dW, db = self.compute_gradient(X_sample, predictions, y_sample)
+        self.update_parameters(dW, db)
+        
+        return self.forward(self.X)
+    
+    def mini_batch_gradient_descent_step(self):
+        """Perform one mini-batch gradient descent step."""
+        batch_size = params.batch_size
+        
+        for batch_indices in self.get_batch_indices(batch_size):
+            # Handle both numpy arrays and pandas DataFrames
+            if isinstance(self.X, pd.DataFrame):
+                X_batch = self.X.iloc[batch_indices].values
+                y_batch = self.y.iloc[batch_indices].values
+            else:
+                X_batch = self.X[batch_indices]
+                y_batch = self.y[batch_indices]
+            
+            predictions_batch = self.forward(X_batch)
+            dW, db = self.compute_gradient(X_batch, predictions_batch, y_batch)
+            self.update_parameters(dW, db)
+        
+        # Return full dataset predictions for cost calculation
+        return self.forward(self.X)
+
+    ## ------ COMPUTES -----
+
     def sigmoid(self, z: np.ndarray):
         """
             Sigmoid activation function.
@@ -46,26 +111,27 @@ class LogisticRegressionTrainer():
         A = self.sigmoid(Z)
         return A
     
-    def compute_cost(self, predictions: np.ndarray):
-        """
-            Compute binary cross-entropy loss.
-        """
-        m = self.X.shape[0]  
-        cost = np.sum((-np.log(predictions + 1e-8) * self.y) + (-np.log(1 - predictions + 1e-8)) * (1 - self.y))
+    def compute_cost(self, predictions: np.ndarray, y: np.ndarray):
+        """Compute binary cross-entropy loss."""
+        m = len(y)
+        cost = np.sum((-np.log(predictions + 1e-8) * y) + 
+                     (-np.log(1 - predictions + 1e-8)) * (1 - y))
         cost = cost / m
         return cost
     
-    def compute_gradient(self, predictions: np.ndarray):
-        """
-            Computes the gradients for the model using given predictions.
-        """
-        m = self.X.shape[0]
-        # compute gradients
-        self.dW = np.matmul(self.X.T, (predictions - self.y))
-        self.db = np.sum(np.subtract(predictions, self.y))
-        # scale gradients
-        self.dW = self.dW * 1 / m
-        self.db = self.db * 1 / m    
+    def compute_gradient(self, X: np.ndarray, predictions: np.ndarray, y: np.ndarray):
+        """Compute gradients for the model using given predictions."""
+        m = len(y)
+        dW = np.matmul(X.T, (predictions - y)) / m
+        db = np.sum(predictions - y) / m
+        return dW, db
+    
+    def update_parameters(self, dW: np.ndarray, db: float):
+        """Update model parameters using gradients."""
+        self.W -= self.learning_rate * dW
+        self.b -= self.learning_rate * db
+
+    ## ------ FIT ----- 
 
     def fit(self, X, y, callback, house_name):
         """
@@ -76,53 +142,12 @@ class LogisticRegressionTrainer():
         self.m = X.shape[0]
         self.initialize_parameter()
 
-        for i in range(self.epochs):
-            if self.optimization == "gradient_descent":
-                predictions = self.forward(self.X)
-                self.compute_gradient(predictions)
-                self.W -= self.learning_rate * self.dW
-                self.b -= self.learning_rate * self.db
-
-            elif self.optimization == "stochastic_gradient_descent":
-                random_index = np.random.randint(0, self.m)
-                X_sample = self.X[random_index:random_index+1]
-                y_sample = self.y[random_index:random_index+1]
-                z_sample = np.dot(X_sample, self.W) + self.b
-                prediction_sample = self.sigmoid(z_sample)
-                self.dW = X_sample.T.dot(prediction_sample - y_sample)
-                self.db = np.sum(prediction_sample - y_sample)
-                self.W -= self.learning_rate * self.dW
-                self.b -= self.learning_rate * self.db
-
-            elif self.optimization == "mini_batch_gradient_descent":
-                batch_size = params.batch_size
-                num_batches = int(np.ceil(self.m / batch_size))
-                shuffled_indices = np.random.permutation(self.m)
-
-                for j in range(num_batches):
-                    start_idx = j * batch_size
-                    end_idx = min((j + 1) * batch_size, self.m)
-                    batch_indices = shuffled_indices[start_idx:end_idx]
-                    X_batch = self.X.iloc[batch_indices].values
-                    y_batch = self.y.iloc[batch_indices].values
-                    z_batch = np.dot(X_batch, self.W) + self.b
-                    prediction_batch = self.sigmoid(z_batch)
-                    dW = X_batch.T.dot(prediction_batch - y_batch)
-                    db = np.sum(prediction_batch - y_batch)
-                    self.W -= self.learning_rate * dW
-                    self.b -= self.learning_rate * db
-
-            else:
-                raise ValueError("Invalid optimization method. Choose 'gradient_descent', 'stochastic_gradient_descent', or 'mini_batch_gradient_descent'.")
-            
-            all_preds = self.forward(self.X)
-            cost = self.compute_cost(all_preds)
+        for epoch in range(self.epochs):
+            all_predictions = self.perform_optimization_step()
+            cost = self.compute_cost(all_predictions, self.y)
             self.cost_history.append(cost)
-            if callback:
-                callback.log_iteration(i, cost, house_name)
-                
-            if i % 200 == 0 or i == self.epochs - 1:
-                print(f"Cost after iteration {i}: {cost}")
+            self.log_progress(epoch, cost, callback, house_name)
+
 
 # ************************************* DATA PREPROCESSING **************************************
 

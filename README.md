@@ -1,3 +1,7 @@
+## TODO
+
+[x] probleme des paths selon la ou on est, find a way to add absolute ones
+[x] rewrite fit to make it nicer
 
 ## Usage 
 
