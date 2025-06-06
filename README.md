@@ -15,6 +15,9 @@ Then, to launch the data visualisations :
 - `python pair_plot.py --path_csv_to_read ../data/dataset_train.csv`
 - `python scatter_plot.py --path_csv_to_read ../data/dataset_train.csv`
 
+Finally, to launch the classifier : 
+- `python logreg_train.py`
+- `python logreg_predict.py --path_truth_csv ../data/dataset_truth.csv`
 
 ## Provided dataset 
 
