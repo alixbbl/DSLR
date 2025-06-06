@@ -94,6 +94,14 @@ class LogisticRegressionTrainer():
         
         # Return full dataset predictions for cost calculation
         return self.forward(self.X)
+    
+    def get_batch_indices(self, batch_size: int):
+        """Generate batch indices for mini-batch processing."""
+        shuffled_indices = np.random.permutation(self.m)
+        
+        for start_idx in range(0, self.m, batch_size):
+            end_idx = min(start_idx + batch_size, self.m)
+            yield shuffled_indices[start_idx:end_idx]
 
     ## ------ COMPUTES -----
 
