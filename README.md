@@ -1,4 +1,4 @@
-# Logistic Regression Model Steps (Three Optimization Algorithms)
+# Logistic Regression Model (Three Optimization Algorithms)
 
 ## Usage 
 
