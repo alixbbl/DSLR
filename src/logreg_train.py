@@ -80,7 +80,6 @@ class LogisticRegressionTrainer():
         batch_size = params.batch_size
         
         for batch_indices in self.get_batch_indices(batch_size):
-            # Handle both numpy arrays and pandas DataFrames
             if isinstance(self.X, pd.DataFrame):
                 X_batch = self.X.iloc[batch_indices].values
                 y_batch = self.y.iloc[batch_indices].values
