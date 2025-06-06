@@ -11,10 +11,6 @@ from utils.store import store_df_to_csv
 LOG_DIR = Path("output/histogram")
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 
-
-# ********************** SOLUTION 1 *******************************
-
-
 def display_histograms(data: pd.DataFrame) -> None:
     sns.set_theme(style="whitegrid")
     fig, axes = plt.subplots(nrows=4, ncols=4, figsize=(16, 12))

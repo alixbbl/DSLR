@@ -6,7 +6,7 @@ from pathlib import Path
 import seaborn as sns
 
 LOG_DIR = Path("output/pair_plots")
-
+LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 def clean_data(data: pd.DataFrame) -> pd.DataFrame:
     data_num = data.select_dtypes(include=["float", "int"])
@@ -57,8 +57,6 @@ def display_pair_plot(data_num: pd.DataFrame) -> None:
 
 
 def main(parsed_args):
-
-    LOG_DIR.mkdir(parents=True, exist_ok=True)
     data = upload_csv(parsed_args.path_csv_to_read)
     if data is None:
         return

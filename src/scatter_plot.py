@@ -7,13 +7,8 @@ from pathlib import Path
 from utils.store import store_df_to_csv
 from utils.upload_csv import upload_csv
 
-# Ce code doit permettre à l'utilisateur de visualiser si, par exemple, les élèves de Gryffondor
-# ont une certaine tendance à avoir de bonnes notes dans les deux matières ou s'il y a des
-# différences de performance entre les maisons.
-# suite a l'histogramme on peut enlever deja : Care of Magical Creatures et Arithmancy
-
 LOG_DIR = Path("output/scatter_plots")
-
+LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 def display_correlation_matrix(numeric_data: pd.DataFrame) -> pd.DataFrame:
     """
@@ -118,7 +113,6 @@ def scatter_plot_correlation_matrix(
 
 def main(parsed_args):
 
-    LOG_DIR.mkdir(parents=True, exist_ok=True)
     data = upload_csv(parsed_args.path_csv_to_read)
 
     numeric_data = data.select_dtypes(include="number")

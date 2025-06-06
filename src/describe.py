@@ -7,6 +7,7 @@ from utils.store import store_df_to_csv
 from typing import Any
 
 LOG_DIR = Path("output/describe")
+LOG_DIR.mkdir(parents=True, exist_ok=True)
 FLOAT_FORMAT = 3
 
 pd.options.display.float_format = lambda x: f"{x:.{FLOAT_FORMAT}f}"
@@ -78,7 +79,6 @@ def prepare_numeric_data(pre_processed_data: pd.DataFrame) -> pd.DataFrame:
 
 
 def main(args):
-    LOG_DIR.mkdir(parents=True, exist_ok=True)
 
     data = upload_csv(args.path_csv_to_read)
 
