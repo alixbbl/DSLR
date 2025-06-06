@@ -12,6 +12,28 @@ DATA_DIR = params.DATA_DIR
 HOGWART_HOUSES = params.hogwart_houses
 TRAINING_FEATURES = params.training_features
 
+class DataPreProcessor:
+    def __init__(self, data_path: str):
+        self.data = upload_csv(data_path)
+
+    def ft_imputation_by_mean(self, df: pd.DataFrame) -> pd.DataFrame:
+        """ Replaces all the NaN by the mean of each Series."""
+        prediction_dataset = pd.DataFrame()
+        for feature in df.columns:
+            prediction_dataset[feature] = df[feature]
+        prediction_dataset.fillna(prediction_dataset.mean(), inplace=True) # imputation par la moyenne
+        return prediction_dataset
+
+    def pre_process(self):
+        self.X = self.data[TRAINING_FEATURES].copy()
+        return self.ft_imputation_by_mean(self.X) 
+    
+    def pre_process_truth(self, dataset_path):
+        data_truth = upload_csv(dataset_path)
+        if 'Index' in data_truth.columns:
+            data_truth.drop(columns='Index', inplace=True)
+        return data_truth['Hogwarts House']
+
 class LogisticRegressionPredictor:
     def __init__(self, weights_file=None):
         self.weights_file = params.weights_file if weights_file else str(LOG_DIR / "model_params.npy")
@@ -45,7 +67,7 @@ class LogisticRegressionPredictor:
         """
         return 1 / (1 + np.exp(-z))
     
-    def predict_proba(self, X):
+    def predict_probability(self, X):
         """
             Predict probabilities for each house
             
@@ -70,7 +92,7 @@ class LogisticRegressionPredictor:
             :param X: Features DataFrame
             :return: list of predicted houses
         """
-        probabilities = self.predict_proba(X)
+        probabilities = self.predict_probability(X)
         predictions = [""] * len(X)
         
         for i in range(len(X)):
@@ -84,16 +106,6 @@ class LogisticRegressionPredictor:
             predictions[i] = best_house
         return predictions
 
-def ft_imputation_by_mean(df: pd.DataFrame) -> pd.DataFrame:
-    """
-        Replaces all the NaN by the mean of each Series.
-    """
-    prediction_dataset = pd.DataFrame()
-    for feature in df.columns:
-        prediction_dataset[feature] = df[feature]
-    prediction_dataset.fillna(prediction_dataset.mean(), inplace=True) # imputation par la moyenne
-    return prediction_dataset
-
 def standardize_with_saved_params(df: pd.DataFrame, stats_path: Path):
     """
         Using the standardization parameters of the training phase.
@@ -103,7 +115,6 @@ def standardize_with_saved_params(df: pd.DataFrame, stats_path: Path):
     std = stats['std']
     return (df - mean) / std
 
-
 # ****************************************** MAIN ***************************************************
 
 
@@ -112,50 +123,27 @@ def main(parsed_args):
     LOG_DIR.mkdir(parents=True, exist_ok=True)
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-    print(f"Loading test data from {params.test_data_path}...")
-    data_test = upload_csv(params.test_data_path)
-    
-    try:        
-        print("Preparing test data...")
-        X = data_test[TRAINING_FEATURES].copy()
-        try:
-            X = ft_imputation_by_mean(X)
-        except Exception as e:
-            raise Exception(f"Preparing data error: {e}")
-        
-        try:
-            predictor = LogisticRegressionPredictor()
-            print("Making predictions...")
-            predictions = predictor.predict(X)
-            save_predictions(predictions, LOG_DIR / "houses.csv")
-        except Exception as e:
-            raise Exception(f"Prediction logic error: {e}")
-        
-        # calcul de perfomance si le fichier de verites terrain est fourni : 
-        if parsed_args.path_truth_csv:
-            data_truth = upload_csv(parsed_args.path_truth_csv)
-            if 'Index' in data_truth.columns:
-                data_truth.drop(columns='Index', inplace=True)
-            y_truth = data_truth['Hogwarts House']
-            y_pred = predictions
-            try :
-                accuracy = calculate_accuracy(y_pred, y_truth)
-                print(f"Accuracy: {accuracy:.4f} ({accuracy * 100:.2f}%)")
-            except:
-                raise Exception(f'Calculating accuracy failure : {e}')
-    
-    except Exception as e:
-        print(f"Error during prediction: {e}")
+    print(f"Loading test data from \"{params.test_data_path}:\"")
+    processor = DataPreProcessor(params.test_data_path)
+    X_val = processor.pre_process()
 
+    try:
+        print("Making predictions...")
+        predictor = LogisticRegressionPredictor()
+        predictions = predictor.predict(X_val)
+        save_predictions(predictions, LOG_DIR / "houses.csv")
+    except Exception as e:
+        raise Exception(f"Prediction logic error: {e}")
+    
+    if parsed_args.path_truth_csv:
+        y_truth = processor.pre_process_truth(parsed_args.path_truth_csv)
+        calculate_accuracy(predictions, y_truth)
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--path_truth_csv',
                         type = str,
-                        default = None,
-                        help = """Optionnal - Truth CSV file to read and calculate accuracy of the modele.""")
+                        help = """Optional - Truth CSV file to read and calculate accuracy of the modele.""")
     parsed_args = parser.parse_args()
     main(parsed_args)
-
-#python logreg_predict.py --path_truth_csv ../data/dataset_truth.csv
