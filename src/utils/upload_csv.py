@@ -1,13 +1,15 @@
 import pandas as pd
+from pathlib import Path
 
-def upload_csv(filepath: str) -> pd.DataFrame:
+def upload_csv(filepath: str | Path) -> pd.DataFrame:
     """
     This function loads a CSV file from the given path and returns a DataFrame.
 
     :param filepath: str - The path to the CSV file.
     :return: pd.DataFrame - The loaded DataFrame.
     """
-    if not filepath.endswith('.csv'):
+    path = Path(filepath)
+    if path.suffix.lower() != '.csv':
         raise ValueError("Invalid file format. Please provide a CSV file.")
     try:
         data = pd.read_csv(filepath, encoding='utf-8')

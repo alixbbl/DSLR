@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from utils.config import params
+from config import params
 from sklearn.model_selection import train_test_split
 # import plotly.express as px
 import tensorflow as tf
@@ -255,15 +255,15 @@ def main():
     LOG_DIR.mkdir(parents=True, exist_ok=True)
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     callback = TensorBoardCallback(LOG_DIR)
-    data = upload_csv(params.training_data_path_features)
+    data = upload_csv(params.training_data_path)
     
     try:
         print("Preparing data for training...\n")
         X_train, X_val, y_train, y_val = prepare_data(data)
 
         # save validation sets
-        store_df_to_csv(X_val, "my_validation_dataset_features", DATA_DIR)
-        store_df_to_csv(y_val, "my_validation_dataset_target", DATA_DIR)
+        store_df_to_csv(X_val, "x_dataset_validation", DATA_DIR)
+        store_df_to_csv(y_val, "y_dataset_validation", DATA_DIR)
 
         print("Training models...\n")
         models = {}

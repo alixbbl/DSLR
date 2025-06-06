@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import argparse
 from pathlib import Path
-from utils.config import params
+from config import params
 from utils.upload_csv import upload_csv
 from utils.metrics import calculate_accuracy
 from utils.store import save_predictions
@@ -75,7 +75,7 @@ class LogisticRegressionPredictor:
             :return: dictionary of probabilities for each house
         """
         if params.standardize:
-            X = standardize_with_saved_params(X, LOG_DIR / params.standardization_params)
+            X = standardize_with_saved_params(X, params.standardization_params_path)
     
         probabilities = {}
         for house, model in self.models.items():

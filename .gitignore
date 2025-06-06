@@ -1,7 +1,10 @@
-src/output
+*/output/
+/output/*
+/data/*
 dslr_env
 env
 __pycache__
+*.pyc
 /data/my_validation_dataset_features.csv
 /data/my_validation_dataset_target.csv
 /data/dataset_truth.csv
